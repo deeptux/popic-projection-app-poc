@@ -1,0 +1,45 @@
+# --- Python Environment ---
+pyenv12/
+.pyenv12/
+env/
+bin/
+lib/
+share/
+Include/
+pyvenv.cfg
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# --- spaCy Models ---
+# It's better to download these via script than to commit them
+# because they are large binaries.
+*/spaCy_models/
+
+# --- Polars & Data ---
+# Ignore temporary Excel or CSV files generated during processing
+*.xlsx
+*.xls
+*.csv
+# If you use polars' parquet features
+*.parquet
+
+# --- PyInstaller (Packaging) ---
+# These are generated when you bundle the backend for Electron
+build/
+dist/
+*.spec
+# PyInstaller metadata
+*.manifest
+*.rc
+
+# --- OS & IDE Files ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- FastAPI/Uvicorn ---
+.env
