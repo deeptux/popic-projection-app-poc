@@ -61,8 +61,8 @@ To provide a seamless user experience, the app implements a strict **synchronous
 1. **Clone & Install Node Modules**
 
    ```bash
-   git clone [https://github.com/popic-llc/revenue-forecast-poc.git](https://github.com/popic-llc/revenue-forecast-poc.git)
-   cd revenue-forecast-poc
+   git clone https://github.com/popic-llc/popic-projection-app-poc.git
+   cd popic-projection-app-poc
    npm install
    ```
 
@@ -73,13 +73,13 @@ To provide a seamless user experience, the app implements a strict **synchronous
    cd backend
 
    # Create virtual environment
-   python -m venv venv
+   "C:\**CHANGE_THIS[Users\Path]**\Programs\Python\Python312\python.exe" -m venv pyenv12
 
    # Activate virtual environment
    # On macOS/Linux:
-   source venv/bin/activate
+   source pyenv12/bin/activate
    # On Windows:
-   .\venv\Scripts\activate
+   .\pyenv12\Scripts\activate
 
    # Install dependencies
    pip install -r requirements.txt
