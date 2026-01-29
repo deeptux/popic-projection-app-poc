@@ -18,7 +18,7 @@ interface AnalyzeResponse {
   templateUrl: './analyze-page.html',
   styleUrl: './analyze-page.css'
 })
-export class AnalyzePageComponent {
+export class AnalyzePage {
   selectedFile: File | null = null;
 
   // Data variables

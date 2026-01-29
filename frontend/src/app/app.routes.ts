@@ -1,14 +1,19 @@
 import { Routes } from '@angular/router';
-import { AnalyzePageComponent } from './analyze-page/analyze-page'; // No .component, just the filename
+import { DashboardPage } from './dashboard-page/dashboard-page';
+import { AnalyzePage } from './analyze-page/analyze-page';
 
 export const routes: Routes = [
     {
+        path: 'dashboard',
+        component: DashboardPage
+    },
+    {
         path: 'analyze',
-        component: AnalyzePageComponent
+        component: AnalyzePage
     },
     {
         path: '',
-        redirectTo: 'analyze',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
     }
 ];
