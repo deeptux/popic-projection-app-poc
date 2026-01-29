@@ -1,0 +1,21 @@
+<div class="min-h-screen bg-gray-50 p-8">
+    <div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Salesforce Client Summary Upload</h1>
+
+        <div class="space-y-4">
+            <label class="block text-sm font-medium text-gray-700">Select Spreadsheet (.xlsx, .xls, .csv)</label>
+
+            <input type="file" (change)="onFileSelected($event)" accept=".xlsx, .xls, .csv"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+
+            <button (click)="uploadFile()" [disabled]="!selectedFile"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:bg-gray-300 disabled:cursor-not-allowed">
+                Upload
+            </button>
+        </div>
+
+        <div *ngIf="selectedFile" class="mt-4 text-sm text-green-600">
+            Ready to upload: <strong>{{ selectedFile.name }}</strong>
+        </div>
+    </div>
+</div>
