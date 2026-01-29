@@ -1,37 +1,49 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table'; // Import Table
+import { MatTableModule } from '@angular/material/table';
+import { RouterModule } from '@angular/router'; // Added for sidebar navigation support
 
-// 1. Define the model to match your Python response
 interface AnalyzeResponse {
   filename: string;
   total_rows: number;
   columns: string[];
-  data: any[]; // You can use a more specific type later if needed
+  data: any[];
 }
 
 @Component({
   selector: 'app-analyze-page',
   standalone: true,
-  imports: [CommonModule, MatTableModule],
+  imports: [CommonModule, MatTableModule, RouterModule],
   templateUrl: './analyze-page.html',
   styleUrl: './analyze-page.css'
 })
 export class AnalyzePage {
+  // --- Tab Logic ---
+  activeTab: 'salesforce' | 'commissions' = 'salesforce';
+
   selectedFile: File | null = null;
 
-  // Data variables
+  // --- Data for Tab 1 (Salesforce) ---
   dataSource: any[] = [];
   displayedColumns: string[] = [];
 
+  // --- Data for Tab 2 (Financial) ---
+  commissionsDataSource: any[] = [];
+  commissionsColumns: string[] = [];
+
   constructor(private http: HttpClient) { }
+
+  // Set which tab is active
+  switchTab(tab: 'salesforce' | 'commissions') {
+    this.activeTab = tab;
+    this.selectedFile = null; // Reset file selection when switching tabs
+  }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
     if (file) {
       this.selectedFile = file;
-      console.log('Selected file:', file.name);
     }
   }
 
@@ -41,19 +53,26 @@ export class AnalyzePage {
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    // This URL must match your FastAPI address
-    this.http.post<AnalyzeResponse>('http://127.0.0.1:8000/analyze', formData)
+    // We can use the same endpoint or different ones based on activeTab
+    const endpoint = this.activeTab === 'salesforce'
+      ? 'http://127.0.0.1:8000/analyze'
+      : 'http://127.0.0.1:8000/analyze'; // Example second endpoint
+
+    this.http.post<AnalyzeResponse>(endpoint, formData)
       .subscribe({
         next: (response) => {
-          console.log('Analysis Results:', response);
-          alert('Upload successful! Check console for data.');
-          this.dataSource = response.data;
-          this.displayedColumns = response.columns;
-          console.log('Table Data Loaded');
+          if (this.activeTab === 'salesforce') {
+            this.dataSource = response.data;
+            this.displayedColumns = response.columns;
+          } else {
+            this.commissionsDataSource = response.data;
+            this.commissionsColumns = response.columns;
+          }
+          this.selectedFile = null;
         },
         error: (err) => {
           console.error('Upload error:', err);
-          alert('Upload failed. Is the Python backend running?');
+          alert('Upload failed. Check if the Python backend is running at ' + endpoint);
         }
       });
   }
