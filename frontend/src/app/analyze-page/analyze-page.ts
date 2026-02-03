@@ -20,7 +20,7 @@ interface AnalyzeResponse {
 })
 export class AnalyzePage {
   // --- Tab Logic ---
-  activeTab: 'salesforce' | 'commissions' = 'salesforce';
+  activeTab: 'salesforce' | 'commissions' | 'referral' = 'salesforce';
 
   selectedFile: File | null = null;
 
@@ -32,10 +32,14 @@ export class AnalyzePage {
   commissionsDataSource: any[] = [];
   commissionsColumns: string[] = [];
 
+  // --- Data for Tab 3 (Financial) ---
+  referralDataSource: any[] = [];
+  referralColumns: string[] = [];
+
   constructor(private http: HttpClient) { }
 
   // Set which tab is active
-  switchTab(tab: 'salesforce' | 'commissions') {
+  switchTab(tab: 'salesforce' | 'commissions' | 'referral') {
     this.activeTab = tab;
     this.selectedFile = null; // Reset file selection when switching tabs
   }
@@ -64,9 +68,14 @@ export class AnalyzePage {
           if (this.activeTab === 'salesforce') {
             this.dataSource = response.data;
             this.displayedColumns = response.columns;
-          } else {
+          }
+          else if (this.activeTab === 'commissions') {
             this.commissionsDataSource = response.data;
             this.commissionsColumns = response.columns;
+          }
+          else {
+            this.referralDataSource = response.data;
+            this.referralColumns = response.columns;
           }
           this.selectedFile = null;
         },
