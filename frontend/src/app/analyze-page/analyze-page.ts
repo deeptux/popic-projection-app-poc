@@ -56,6 +56,9 @@ export class AnalyzePage {
 
     const formData = new FormData();
     formData.append('file', this.selectedFile);
+    formData.append('active_tab', this.activeTab);
+
+    // alert(this.activeTab);
 
     // We can use the same endpoint or different ones based on activeTab
     const endpoint = this.activeTab === 'salesforce'
