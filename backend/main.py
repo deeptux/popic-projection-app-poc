@@ -21,6 +21,21 @@ app.add_middleware(
 def test():
     return "Hello POPIC LLC Projection PoC App"
 
+@app.post("/upload/salesforce-captive-summary/basic")
+async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...)):
+    contents = await file.read()
+
+    df = pl.read_excel(io.BytesIO(contents))
+    df = df.fill_nan(None)
+    data = df.to_dicts()
+
+    return {
+        "filename": file.filename,
+        "total_rows": len(df),
+        "columns": df.columns,
+        "data": data
+    } 
+
 @app.post("/analyze")
 async def analyze_file(file: UploadFile = File(...), active_tab: str = Form(...)):
 
