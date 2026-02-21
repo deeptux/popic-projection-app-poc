@@ -38,7 +38,7 @@
                     Overview
                 </a>
 
-                <a routerLink="/analyze" routerLinkActive="bg-white text-[#FD3A69] font-bold shadow-md"
+                <a routerLink="/spreadsheets" routerLinkActive="bg-white text-[#FD3A69] font-bold shadow-md"
                     class="flex items-center gap-4 bg-white text-[#FD3A69] px-4 py-3 rounded-xl shadow-md font-bold transition-all transform hover:scale-105">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,111 +105,179 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6">Salesforce Client Summary Upload</h2>
 
                         <div class="space-y-4 max-w-xl">
-                            <label class="block text-sm font-medium text-gray-700">Select Spreadsheet (.xlsx, .xls,
-                                .csv)</label>
-                            <input type="file" (change)="onFileSelected($event)" accept=".xlsx, .xls, .csv"
-                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#FF7E5F]/10 file:text-[#FF7E5F] hover:file:bg-[#FF7E5F]/20 cursor-pointer" />
+                            <label class="block text-sm font-medium text-gray-700">Select or drop up to 3 spreadsheets (.xlsx, .xls, .csv)</label>
 
-                            <button (click)="uploadFile()" [disabled]="!selectedFile"
+                            <input #fileInput type="file" (change)="onFileInputChange($event)" accept=".xlsx,.xls,.csv" multiple
+                                class="hidden" />
+
+                            <div
+                                (drop)="onDrop($event)"
+                                (dragover)="onDragOver($event)"
+                                (dragleave)="onDragLeave($event)"
+                                (click)="triggerFileInput()"
+                                class="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors min-h-[120px] flex flex-col items-center justify-center gap-3"
+                                [class.border-gray-300]="!fileTypeError()"
+                                [class.border-red-400]="fileTypeError()"
+                                [class.bg-red-50]="fileTypeError()"
+                                [class.hover:border-[#FF7E5F]]="!fileTypeError()">
+                                @if (selectedFiles().length === 0) {
+                                    <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to choose (max 3)</p>
+                                    <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError() }}</p>
+                                } @else {
+                                    <div class="flex flex-wrap gap-3 justify-center items-start w-full" (click)="$event.stopPropagation()">
+                                        @for (f of selectedFiles(); track f.name + $index) {
+                                            <div class="drop-zone-thumbnail">
+                                                <button type="button" class="drop-zone-thumbnail-remove" (click)="removeFile($index)" aria-label="Remove file">×</button>
+                                                <div class="drop-zone-thumbnail-icon">
+                                                    <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="drop-zone-thumbnail-name" [title]="f.name">{{ truncateFilename(f.name, 40) }}</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <button type="button" (click)="clearAllFiles(); $event.stopPropagation()" class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
+                                }
+                            </div>
+
+                            <button (click)="uploadFile()" [disabled]="!canUpload()"
                                 class="w-full bg-gradient-to-r from-[#FF7E5F] to-[#FD3A69] text-white font-bold py-3 px-4 rounded-xl transition transform active:scale-95 disabled:grayscale disabled:cursor-not-allowed shadow-lg shadow-orange-200">
-                                Upload and Analyze
+                                Upload and spreadsheets (v2)
                             </button>
                         </div>
 
-                        <div *ngIf="selectedFile" class="mt-4 text-sm text-green-600 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            Ready to upload: <strong>{{ selectedFile.name }}</strong>
-                        </div>
-
-                        <div *ngIf="dataSource.length > 0" class="mt-8">
-
+                        <div *ngIf="hasAnyRawResult()" class="mt-8">
                             <div class="flex border-b border-gray-200 mb-4">
-                                <button (click)="salesforceSubTab = 'raw'"
+                                <button (click)="onRawDataTabClick()"
                                     [class]="salesforceSubTab === 'raw' ? 'border-[#FD3A69] text-[#FD3A69]' : 'border-transparent text-gray-500 hover:text-gray-700'"
                                     class="py-2 px-4 border-b-2 font-medium text-sm transition-colors focus:outline-none">
                                     Raw Data
                                 </button>
-                                <button (click)="salesforceSubTab = 'consolidated'"
+                                <button (click)="onCleanedDataTabClick()"
                                     [class]="salesforceSubTab === 'consolidated' ? 'border-[#FD3A69] text-[#FD3A69]' : 'border-transparent text-gray-500 hover:text-gray-700'"
                                     class="py-2 px-4 border-b-2 font-medium text-sm transition-colors focus:outline-none">
                                     Cleaned Data
                                 </button>
-                                <button (click)="salesforceSubTab = 'metrics'"
+                                <button (click)="onMetricsTabClick()"
                                     [class]="salesforceSubTab === 'metrics' ? 'border-[#FD3A69] text-[#FD3A69]' : 'border-transparent text-gray-500 hover:text-gray-700'"
                                     class="py-2 px-4 border-b-2 font-medium text-sm transition-colors focus:outline-none">
-                                    Key Metrics
+                                    Checked Stats
                                 </button>
                             </div>
 
+                            <!-- Raw Data content -->
                             <div *ngIf="salesforceSubTab === 'raw'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div
-                                    class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                                    <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{ dataSource.length
-                                        }} rows)</h2>
+                                <!-- Sub-tabs when 2+ files -->
+                                <div *ngIf="hasRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                    @for (slot of rawFileResults(); track slot.filename + $index) {
+                                        <button (click)="setRawSubTab($index)"
+                                            [class]="selectedRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                            [title]="slot.filename">
+                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                        </button>
+                                    }
                                 </div>
-                                <div class="overflow-auto max-h-[500px]">
-                                    <table mat-table [dataSource]="dataSource" class="w-full">
-                                        <ng-container *ngFor="let col of displayedColumns" [matColumnDef]="col">
-                                            <th mat-header-cell *matHeaderCellDef
-                                                class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
-                                                {{ col }}
-                                            </th>
-                                            <td mat-cell *matCellDef="let element"
-                                                class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
-                                                {{ element[col] }}
-                                            </td>
-                                        </ng-container>
-                                        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                                            class="hover:bg-gray-50 transition"></tr>
-                                    </table>
+                                <div class="p-6">
+                                    @if (currentRawSlot(); as slot) {
+                                        @if (slot.loading) {
+                                            <div class="flex flex-col items-center py-8">
+                                                <div class="etl-loader-wrap">
+                                                    <div class="etl-loader"></div>
+                                                    <div class="etl-loader-inner"></div>
+                                                </div>
+                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
+                                            </div>
+                                        } @else if (slot.error) {
+                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                        } @else if (slot.data && slot.columns) {
+                                            <div class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
+                                                <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{ slot.data.length }} rows)</h2>
+                                            </div>
+                                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                                <table mat-table [dataSource]="slot.data" class="w-full">
+                                                    <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
+                                                        <th mat-header-cell *matHeaderCellDef
+                                                            class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
+                                                            {{ col }}
+                                                        </th>
+                                                        <td mat-cell *matCellDef="let element"
+                                                            class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
+                                                            {{ element[col] }}
+                                                        </td>
+                                                    </ng-container>
+                                                    <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
+                                                    <tr mat-row *matRowDef="let row; columns: slot.columns;" class="hover:bg-gray-50 transition"></tr>
+                                                </table>
+                                            </div>
+                                        }
+                                    }
                                 </div>
                             </div>
 
+                            <!-- Cleaned Data content -->
                             <div *ngIf="salesforceSubTab === 'consolidated'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div
-                                    class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                                    <h2 class="font-bold text-lg text-gray-700">Cleaned Data Results ({{
-                                        cleanedSalesforceCaptiveSummaryDataSource.length
-                                        }} rows)</h2>
+                                <div *ngIf="hasCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                    @for (slot of cleanedFileResults(); track slot.filename + $index) {
+                                        <button (click)="setCleanedSubTab($index)"
+                                            [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                            [title]="slot.filename">
+                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                        </button>
+                                    }
                                 </div>
-                                <div class="overflow-auto max-h-[500px]">
-                                    <table mat-table [dataSource]="cleanedSalesforceCaptiveSummaryDataSource"
-                                        class="w-full">
-                                        <ng-container *ngFor="let col of cleanedSalesforceCaptiveSummaryColumns"
-                                            [matColumnDef]="col">
-                                            <th mat-header-cell *matHeaderCellDef
-                                                class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
-                                                {{ col }}
-                                            </th>
-                                            <td mat-cell *matCellDef="let element"
-                                                class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
-                                                {{ element[col] }}
-                                            </td>
-                                        </ng-container>
-                                        <tr mat-header-row
-                                            *matHeaderRowDef="cleanedSalesforceCaptiveSummaryColumns; sticky: true">
-                                        </tr>
-                                        <tr mat-row
-                                            *matRowDef="let row; columns: cleanedSalesforceCaptiveSummaryColumns;"
-                                            class="hover:bg-gray-50 transition"></tr>
-                                    </table>
+                                <div class="p-6">
+                                    @if (currentCleanedSlot(); as slot) {
+                                        @if (slot.loading) {
+                                            <div class="flex flex-col items-center py-8">
+                                                <div class="etl-loader-wrap">
+                                                    <div class="etl-loader"></div>
+                                                    <div class="etl-loader-inner"></div>
+                                                </div>
+                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
+                                            </div>
+                                        } @else if (slot.error) {
+                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                        } @else if (slot.data && slot.columns) {
+                                            <div class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
+                                                <h2 class="font-bold text-lg text-gray-700">Cleaned Data Results ({{ slot.data.length }} rows)</h2>
+                                            </div>
+                                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                                <table mat-table [dataSource]="slot.data" class="w-full">
+                                                    <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
+                                                        <th mat-header-cell *matHeaderCellDef
+                                                            class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
+                                                            {{ col }}
+                                                        </th>
+                                                        <td mat-cell *matCellDef="let element"
+                                                            class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
+                                                            {{ element[col] }}
+                                                        </td>
+                                                    </ng-container>
+                                                    <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
+                                                    <tr mat-row *matRowDef="let row; columns: slot.columns;" class="hover:bg-gray-50 transition"></tr>
+                                                </table>
+                                            </div>
+                                        }
+                                    } @else if (cleanedSlotCount() === 0 && rawSlotCount() > 0) {
+                                        <p class="text-gray-500 text-center py-4">Click the Cleaned Data tab to load cleaned results.</p>
+                                    }
                                 </div>
                             </div>
 
                             <div *ngIf="salesforceSubTab === 'metrics'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div
-                                    class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                                <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
                                     <h2 class="font-bold text-lg text-gray-700">Key Performance Metrics</h2>
                                 </div>
                                 <div class="overflow-auto max-h-[500px] p-8 text-center text-gray-500">
                                     <p>Metrics table will appear here.</p>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -226,7 +294,7 @@
 
                             <button (click)="uploadFile()" [disabled]="!selectedFile"
                                 class="w-full bg-gradient-to-r from-[#FF7E5F] to-[#FD3A69] text-white font-bold py-3 px-4 rounded-xl transition transform active:scale-95 disabled:grayscale disabled:cursor-not-allowed shadow-lg shadow-orange-200">
-                                Upload and Analyze
+                                Upload and spreadsheets
                             </button>
                         </div>
                         <div *ngIf="selectedFile" class="mt-4 text-sm text-green-600 flex items-center gap-2">
@@ -237,12 +305,9 @@
                         <div *ngIf="commissionsDataSource.length > 0"
                             class="mt-4 bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                             <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                                <h2 class="font-bold text-lg text-gray-700">Analysis Results ({{
-                                    commissionsDataSource.length }}
-                                    rows)
-                                </h2>
+                                <h2 class="font-bold text-lg text-gray-700">Analysis Results ({{ commissionsDataSource.length }} rows)</h2>
                             </div>
-                            <div class="overflow-auto max-h-[500px]">
+                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
                                 <table mat-table [dataSource]="commissionsDataSource" class="w-full">
                                     <ng-container *ngFor="let col of commissionsColumns" [matColumnDef]="col">
                                         <th mat-header-cell *matHeaderCellDef
@@ -269,14 +334,13 @@
 
                         <h2 class="text-xl font-bold text-gray-800 mb-6">Referral Report Upload</h2>
                         <div class="space-y-4 max-w-xl">
-                            <label class="block text-sm font-medium text-gray-700">Select Spreadsheet (.xlsx, .xls,
-                                .csv)</label>
+                            <label class="block text-sm font-medium text-gray-700">Select Spreadsheet (.xlsx, .xls, .csv)</label>
                             <input type="file" (change)="onFileSelected($event)" accept=".xlsx, .xls, .csv"
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#FF7E5F]/10 file:text-[#FF7E5F] hover:file:bg-[#FF7E5F]/20 cursor-pointer" />
 
                             <button (click)="uploadFile()" [disabled]="!selectedFile"
                                 class="w-full bg-gradient-to-r from-[#FF7E5F] to-[#FD3A69] text-white font-bold py-3 px-4 rounded-xl transition transform active:scale-95 disabled:grayscale disabled:cursor-not-allowed shadow-lg shadow-orange-200">
-                                Upload and Analyze
+                                Upload and spreadsheets
                             </button>
                         </div>
                         <div *ngIf="selectedFile" class="mt-4 text-sm text-green-600 flex items-center gap-2">
@@ -284,17 +348,14 @@
                             Ready to upload: <strong>{{ selectedFile.name }}</strong>
                         </div>
 
-                        <div *ngIf="commissionsDataSource.length > 0"
+                        <div *ngIf="referralDataSource.length > 0"
                             class="mt-4 bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                             <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                                <h2 class="font-bold text-lg text-gray-700">Analysis Results ({{
-                                    commissionsDataSource.length }}
-                                    rows)
-                                </h2>
+                                <h2 class="font-bold text-lg text-gray-700">Analysis Results ({{ referralDataSource.length }} rows)</h2>
                             </div>
-                            <div class="overflow-auto max-h-[500px]">
-                                <table mat-table [dataSource]="commissionsDataSource" class="w-full">
-                                    <ng-container *ngFor="let col of commissionsColumns" [matColumnDef]="col">
+                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                <table mat-table [dataSource]="referralDataSource" class="w-full">
+                                    <ng-container *ngFor="let col of referralColumns" [matColumnDef]="col">
                                         <th mat-header-cell *matHeaderCellDef
                                             class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider">
                                             {{ col }}
@@ -304,8 +365,8 @@
                                             {{ element[col] }}
                                         </td>
                                     </ng-container>
-                                    <tr mat-header-row *matHeaderRowDef="commissionsColumns; sticky: true"></tr>
-                                    <tr mat-row *matRowDef="let row; columns: commissionsColumns;"
+                                    <tr mat-header-row *matHeaderRowDef="referralColumns; sticky: true"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: referralColumns;"
                                         class="hover:bg-gray-50 transition"></tr>
                                 </table>
                             </div>
