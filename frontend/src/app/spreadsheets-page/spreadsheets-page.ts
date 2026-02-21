@@ -77,6 +77,27 @@ export function truncateFilename(name: string, maxLen = 40): string {
   return name.slice(0, half) + '...' + name.slice(-half);
 }
 
+/** Format numeric values with commas and 2 decimal places; pass-through non-numbers. */
+export function formatCellValue(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  const n = Number(val);
+  if (!Number.isNaN(n)) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+  }
+  return String(val);
+}
+
+/** Heuristic: column is numeric if first non-null values look like numbers. */
+function isColumnNumeric(data: any[], columnKey: string): boolean {
+  for (const row of data) {
+    const v = row[columnKey];
+    if (v === null || v === undefined || v === '') continue;
+    const n = Number(v);
+    if (Number.isNaN(n)) return false;
+  }
+  return true;
+}
+
 @Component({
   selector: 'app-spreadsheets-page',
   standalone: true,
@@ -126,6 +147,13 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     const idx = this.selectedCleanedIndex();
     return slots[idx] ?? null;
   });
+
+  readonly cleanedSearchTerms = signal<string[]>([]);
+  readonly cleanedSortState = signal<Array<{ columnKey: string | null; direction: 'asc' | 'desc' }>>([]);
+  readonly cleanedPageIndex = signal<number[]>([]);
+  readonly cleanedPageSize = signal<number[]>([]);
+
+  readonly CLEANED_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
   ngOnInit(): void {
     // Optional: one-time init if needed
@@ -268,4 +296,169 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   }
 
   truncateFilename = truncateFilename;
+  formatCellValue = formatCellValue;
+
+  getCleanedTableData(slot: { data?: any[]; columns?: string[] } | null): any[] {
+    if (!slot?.data?.length || !slot?.columns?.length) return [];
+    const data = slot.data;
+    const columns = slot.columns;
+    const idx = this.selectedCleanedIndex();
+    const search = (this.cleanedSearchTerms()[idx] ?? '').trim().toLowerCase();
+    const sortState = this.cleanedSortState()[idx] ?? { columnKey: null, direction: 'asc' as const };
+    let rows = search
+      ? data.filter(row =>
+        columns.some(col => String(row[col] ?? '').toLowerCase().includes(search))
+      )
+      : [...data];
+    if (sortState.columnKey && columns.includes(sortState.columnKey)) {
+      const col = sortState.columnKey;
+      const numeric = isColumnNumeric(data, col);
+      const dir = sortState.direction === 'asc' ? 1 : -1;
+      rows = [...rows].sort((a, b) => {
+        const va = a[col];
+        const vb = b[col];
+        if (numeric) {
+          const na = Number(va);
+          const nb = Number(vb);
+          if (Number.isNaN(na) && Number.isNaN(nb)) return 0;
+          if (Number.isNaN(na)) return 1;
+          if (Number.isNaN(nb)) return -1;
+          return dir * (na - nb);
+        }
+        const sa = String(va ?? '');
+        const sb = String(vb ?? '');
+        return dir * sa.localeCompare(sb, undefined, { sensitivity: 'base' });
+      });
+    }
+    return rows;
+  }
+
+  setCleanedSearch(value: string): void {
+    const idx = this.selectedCleanedIndex();
+    this.cleanedSearchTerms.update(terms => {
+      const next = [...terms];
+      while (next.length <= idx) next.push('');
+      next[idx] = value;
+      return next;
+    });
+  }
+
+  getCleanedSearch(): string {
+    const idx = this.selectedCleanedIndex();
+    return this.cleanedSearchTerms()[idx] ?? '';
+  }
+
+  setCleanedSort(columnKey: string): void {
+    const idx = this.selectedCleanedIndex();
+    this.cleanedSortState.update(state => {
+      const next = [...state];
+      while (next.length <= idx) next.push({ columnKey: null, direction: 'asc' });
+      const prev = next[idx];
+      const sameCol = prev.columnKey === columnKey;
+      next[idx] = {
+        columnKey,
+        direction: sameCol && prev.direction === 'asc' ? 'desc' : 'asc'
+      };
+      return next;
+    });
+  }
+
+  getCleanedSortForColumn(columnKey: string): 'asc' | 'desc' | null {
+    const idx = this.selectedCleanedIndex();
+    const s = this.cleanedSortState()[idx];
+    if (!s || s.columnKey !== columnKey) return null;
+    return s.direction;
+  }
+
+  isColumnNumeric(data: any[], columnKey: string): boolean {
+    return isColumnNumeric(data, columnKey);
+  }
+
+  getCleanedPageIndex(): number {
+    const idx = this.selectedCleanedIndex();
+    return this.cleanedPageIndex()[idx] ?? 0;
+  }
+
+  getCleanedPageSize(): number {
+    const idx = this.selectedCleanedIndex();
+    return this.cleanedPageSize()[idx] ?? 25;
+  }
+
+  setCleanedPageIndex(page: number): void {
+    const idx = this.selectedCleanedIndex();
+    this.cleanedPageIndex.update(arr => {
+      const next = [...arr];
+      while (next.length <= idx) next.push(0);
+      next[idx] = Math.max(0, page);
+      return next;
+    });
+  }
+
+  setCleanedPageSize(size: number): void {
+    const idx = this.selectedCleanedIndex();
+    this.cleanedPageSize.update(arr => {
+      const next = [...arr];
+      while (next.length <= idx) next.push(25);
+      next[idx] = size;
+      return next;
+    });
+    this.cleanedPageIndex.update(arr => {
+      const next = [...arr];
+      while (next.length <= idx) next.push(0);
+      next[idx] = 0;
+      return next;
+    });
+  }
+
+  getCleanedTotalRows(slot: { data?: any[]; columns?: string[] } | null): number {
+    return this.getCleanedTableData(slot).length;
+  }
+
+  getCleanedTotalPages(slot: { data?: any[]; columns?: string[] } | null): number {
+    const total = this.getCleanedTotalRows(slot);
+    const size = this.getCleanedPageSize();
+    return size <= 0 ? 0 : Math.ceil(total / size);
+  }
+
+  getClampedCleanedPageIndex(slot: { data?: any[]; columns?: string[] } | null): number {
+    const totalPages = this.getCleanedTotalPages(slot);
+    return Math.min(Math.max(0, this.getCleanedPageIndex()), Math.max(0, totalPages - 1));
+  }
+
+  getCleanedPaginatedData(slot: { data?: any[]; columns?: string[] } | null): any[] {
+    const full = this.getCleanedTableData(slot);
+    const pageSize = this.getCleanedPageSize();
+    const pageIndex = this.getClampedCleanedPageIndex(slot);
+    const start = pageIndex * pageSize;
+    return full.slice(start, start + pageSize);
+  }
+
+  /** Returns page indices to display; -1 means ellipsis. */
+  getCleanedPageNumbers(totalPages: number): number[] {
+    const current = this.getClampedCleanedPageIndex(this.currentCleanedSlot());
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i);
+    }
+    const pages: number[] = [];
+    if (current <= 3) {
+      for (let i = 0; i < 5; i++) pages.push(i);
+      pages.push(-1);
+      pages.push(totalPages - 1);
+    } else if (current >= totalPages - 4) {
+      pages.push(0);
+      pages.push(-1);
+      for (let i = totalPages - 5; i < totalPages; i++) pages.push(i);
+    } else {
+      pages.push(0);
+      pages.push(-1);
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+      pages.push(-1);
+      pages.push(totalPages - 1);
+    }
+    return pages;
+  }
+
+  min(a: number, b: number): number {
+    return Math.min(a, b);
+  }
 }
