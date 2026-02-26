@@ -6,7 +6,8 @@ import {
   OnInit,
   OnDestroy,
   ViewChild,
-  ElementRef
+  ElementRef,
+  effect
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -14,6 +15,8 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { BaseChartDirective } from 'ng2-charts';
+import { forkJoin } from 'rxjs';
 
 import {
   selectRawFileResults,
@@ -29,6 +32,7 @@ import {
 } from '../store/spreadsheets';
 
 const API_BASIC = 'http://127.0.0.1:8000/upload/salesforce-captive-summary/basic';
+const API_ANALYTICS = 'http://127.0.0.1:8000/analytics';
 
 interface SpreadsheetsResponse {
   filename: string;
@@ -77,6 +81,21 @@ export function truncateFilename(name: string, maxLen = 40): string {
   return name.slice(0, half) + '...' + name.slice(-half);
 }
 
+/** Truncate legend/category label to maxLen with ellipsis in the middle (for chart axes). */
+export function truncateLegendLabel(name: string, maxLen = 20): string {
+  if (!name || name.length <= maxLen) return name;
+  const half = Math.floor((maxLen - 3) / 2);
+  return name.slice(0, half) + '…' + name.slice(-half);
+}
+
+/** Fisher–Yates shuffle (mutates array). */
+function shuffleArray<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
 /** Format numeric values with commas and 2 decimal places; pass-through non-numbers. */
 export function formatCellValue(val: unknown): string {
   if (val === null || val === undefined) return '';
@@ -98,10 +117,24 @@ function isColumnNumeric(data: any[], columnKey: string): boolean {
   return true;
 }
 
+export interface AnalyticsSlot {
+  data: any[];
+  columns: string[];
+}
+
+/** Cached analytics per file index (used to avoid repeat API requests when switching Checked Stats sub-tabs). */
+interface AnalyticsCacheEntry {
+  line: { labels: string[]; values: number[] } | null;
+  bar: { labels: string[]; values: number[] } | null;
+  pieRlip: { label: string; value: number; percent: number }[];
+  pieRap: { label: string; value: number; percent: number }[];
+  pieCompare: { label: string; value: number; percent: number }[];
+}
+
 @Component({
   selector: 'app-spreadsheets-page',
   standalone: true,
-  imports: [CommonModule, MatTableModule, RouterModule],
+  imports: [CommonModule, MatTableModule, RouterModule, BaseChartDirective],
   templateUrl: './spreadsheets-page.html',
   styleUrl: './spreadsheets-page.css'
 })
@@ -112,7 +145,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
 
   activeTab: 'salesforce' | 'commissions' | 'referral' = 'salesforce';
-  salesforceSubTab: 'raw' | 'consolidated' | 'metrics' = 'raw';
+  salesforceSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
 
   readonly selectedFiles = signal<File[]>([]);
   readonly fileTypeError = signal<string | null>(null);
@@ -148,6 +181,18 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     return slots[idx] ?? null;
   });
 
+  readonly checkedStatsTabActive = signal(false);
+  readonly checkedStatsLoading = signal(false);
+  readonly checkedStatsError = signal<string | null>(null);
+  readonly lineChartData = signal<{ labels: string[]; values: number[] } | null>(null);
+  readonly barChartData = signal<{ labels: string[]; values: number[] } | null>(null);
+  readonly pieRlipData = signal<{ label: string; value: number; percent: number }[] | null>(null);
+  readonly pieRapData = signal<{ label: string; value: number; percent: number }[] | null>(null);
+  readonly pieCompareData = signal<{ label: string; value: number; percent: number }[] | null>(null);
+
+  /** Per-file analytics cache (key = selectedCleanedIndex). Cleared on new upload. */
+  private readonly analyticsCache = new Map<number, AnalyticsCacheEntry>();
+
   readonly cleanedSearchTerms = signal<string[]>([]);
   readonly cleanedSortState = signal<Array<{ columnKey: string | null; direction: 'asc' | 'desc' }>>([]);
   readonly cleanedPageIndex = signal<number[]>([]);
@@ -155,9 +200,51 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   readonly CLEANED_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-  ngOnInit(): void {
-    // Optional: one-time init if needed
+  constructor() {
+    effect(() => {
+      if (!this.checkedStatsTabActive()) return;
+      const idx = this.selectedCleanedIndex();
+      const slot = this.currentCleanedSlot();
+      if (!slot?.data?.length || !slot?.columns?.length) {
+        this.lineChartData.set(null);
+        this.barChartData.set(null);
+        this.pieRlipData.set(null);
+        this.pieRapData.set(null);
+        this.pieCompareData.set(null);
+        this.checkedStatsError.set(null);
+        return;
+      }
+      const cached = this.analyticsCache.get(idx);
+      if (cached) {
+        this.applyCachedAnalytics(cached);
+        this.checkedStatsLoading.set(false);
+        this.checkedStatsError.set(null);
+        return;
+      }
+      this.loadCheckedStatsCharts({ data: slot.data, columns: slot.columns }, idx);
+    });
   }
+
+  private applyCachedAnalytics(cached: AnalyticsCacheEntry): void {
+    this.lineChartData.set(cached.line);
+    this.barChartData.set(cached.bar);
+    this.pieRlipData.set(cached.pieRlip);
+    this.pieRapData.set(cached.pieRap);
+    this.pieCompareData.set(cached.pieCompare);
+  }
+
+  private clearAnalyticsCacheAndCharts(): void {
+    this.analyticsCache.clear();
+    this.lineChartData.set(null);
+    this.barChartData.set(null);
+    this.pieRlipData.set(null);
+    this.pieRapData.set(null);
+    this.pieCompareData.set(null);
+    this.checkedStatsError.set(null);
+    this.checkedStatsLoading.set(false);
+  }
+
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.store.dispatch(resetSpreadsheetsUpload());
@@ -228,6 +315,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       }
       this.fileTypeError.set(null);
       this.filesForCleanedRequest = [...valid];
+      this.clearAnalyticsCacheAndCharts();
       this.store.dispatch(resetSpreadsheetsUpload());
       this.store.dispatch(setSelectedRawIndex({ index: 0 }));
       this.store.dispatch(setSelectedCleanedIndex({ index: 0 }));
@@ -270,18 +358,223 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   onRawDataTabClick(): void {
     this.salesforceSubTab = 'raw';
+    this.checkedStatsTabActive.set(false);
   }
 
   onCleanedDataTabClick(): void {
-    this.salesforceSubTab = 'consolidated';
+    this.salesforceSubTab = 'cleanedData';
+    this.checkedStatsTabActive.set(false);
     if (this.filesForCleanedRequest.length > 0 && this.cleanedFileResults().length === 0) {
       this.store.dispatch(uploadCleanedFiles({ files: this.filesForCleanedRequest }));
     }
   }
 
-  onMetricsTabClick(): void {
-    this.salesforceSubTab = 'metrics';
+  onCheckedStatsTabClick(): void {
+    this.salesforceSubTab = 'checkedStats';
+    this.checkedStatsTabActive.set(true);
+    if (this.filesForCleanedRequest.length > 0 && this.cleanedFileResults().length === 0) {
+      this.store.dispatch(uploadCleanedFiles({ files: this.filesForCleanedRequest }));
+    }
   }
+
+  setCleanedSubTabForCheckedStats(index: number): void {
+    this.store.dispatch(setSelectedCleanedIndex({ index }));
+  }
+
+  loadCheckedStatsCharts(slot: AnalyticsSlot, fileIndex: number): void {
+    this.checkedStatsError.set(null);
+    this.checkedStatsLoading.set(true);
+    const body = { data: slot.data, columns: slot.columns };
+    forkJoin({
+      line: this.http.post<{ labels: string[]; values: number[] }>(`${API_ANALYTICS}/top-additional-rent-line`, body),
+      bar: this.http.post<{ labels: string[]; values: number[] }>(`${API_ANALYTICS}/top-total-available-units-bar`, body),
+      pieRlip: this.http.post<{ slices: { label: string; value: number; percent: number }[] }>(`${API_ANALYTICS}/pie-popic-fee-rlip`, body),
+      pieRap: this.http.post<{ slices: { label: string; value: number; percent: number }[] }>(`${API_ANALYTICS}/pie-popic-fee-rap`, body),
+      pieCompare: this.http.post<{ slices: { label: string; value: number; percent: number }[] }>(`${API_ANALYTICS}/pie-popic-fee-comparison`, body)
+    }).subscribe({
+      next: res => {
+        let lineEntry: { labels: string[]; values: number[] } | null = res.line;
+        if (res.line?.labels?.length && res.line?.values?.length) {
+          const pairs = res.line.labels.map((label, i) => ({ label, value: res.line!.values[i] }));
+          shuffleArray(pairs);
+          lineEntry = { labels: pairs.map(p => p.label), values: pairs.map(p => p.value) };
+        }
+        this.lineChartData.set(lineEntry);
+        this.barChartData.set(res.bar);
+        this.pieRlipData.set(res.pieRlip.slices);
+        this.pieRapData.set(res.pieRap.slices);
+        this.pieCompareData.set(res.pieCompare.slices);
+        this.analyticsCache.set(fileIndex, {
+          line: lineEntry,
+          bar: res.bar,
+          pieRlip: res.pieRlip.slices,
+          pieRap: res.pieRap.slices,
+          pieCompare: res.pieCompare.slices
+        });
+        this.checkedStatsLoading.set(false);
+      },
+      error: err => {
+        this.checkedStatsError.set(err?.error?.detail || err?.message || 'Analytics request failed');
+        this.checkedStatsLoading.set(false);
+      }
+    });
+  }
+
+  getLineChartChartData(): { labels: string[]; datasets: { data: number[]; label: string; [key: string]: unknown }[] } | null {
+    const d = this.lineChartData();
+    if (!d?.labels?.length) return null;
+    return {
+      labels: d.labels.map(l => truncateLegendLabel(l, 20)),
+      datasets: [{
+        data: d.values,
+        label: 'Additional Rent',
+        fill: true,
+        backgroundColor: 'rgba(255, 126, 95, 0.15)',
+        borderColor: '#FF7E5F',
+        pointBackgroundColor: '#FF7E5F',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.4
+      }]
+    };
+  }
+
+  getBarChartChartData(): { labels: string[]; datasets: { data: number[]; label: string; backgroundColor: string[] }[] } | null {
+    const d = this.barChartData();
+    if (!d?.labels?.length) return null;
+    const colors = this.chartColors;
+    const barColors = d.values.map((_, i) => colors[i % colors.length]);
+    return {
+      labels: d.labels.map(l => truncateLegendLabel(l, 20)),
+      datasets: [{
+        data: d.values,
+        label: 'Total Available Units',
+        backgroundColor: barColors
+      }]
+    };
+  }
+
+  formatPieValue(value: number): string {
+    return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  getPieColors(count: number): string[] {
+    const palette = ['#FF7E5F', '#FD3A69', '#f97316', '#ea580c', '#64748b', '#c2410c', '#9a3412'];
+    return Array.from({ length: count }, (_, i) => palette[i % palette.length]);
+  }
+
+  getPieLegendItems(slices: { label: string; value: number; percent: number }[] | null): { label: string; value: number; percent: number; color: string }[] {
+    if (!slices?.length) return [];
+    const colors = this.getPieColors(slices.length);
+    return slices.map((s, i) => ({ ...s, color: colors[i] }));
+  }
+
+  getPieChartData(slices: { label: string; value: number; percent: number }[] | null): { labels: string[]; datasets: { data: number[]; backgroundColor: string[] }[] } | null {
+    if (!slices?.length) return null;
+    const colors = this.getPieColors(slices.length);
+    return {
+      labels: slices.map(s => `${s.label} ${this.formatPieValue(s.value)} (${s.percent}%)`),
+      datasets: [{
+        data: slices.map(s => s.value),
+        backgroundColor: colors
+      }]
+    };
+  }
+
+  get lineChartOptions() {
+    const fullLabels = this.lineChartData()?.labels ?? [];
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top' as const },
+        tooltip: {
+          callbacks: {
+            title: (items: any[]) => {
+              const idx = items[0]?.dataIndex;
+              return idx !== undefined && fullLabels[idx] ? fullLabels[idx] : '';
+            },
+            label: (ctx: any) => {
+              const val = ctx.parsed?.y ?? ctx.raw;
+              const formatted = typeof val === 'number' ? '$' + val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(val);
+              return 'Additional Rent: ' + formatted;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 35, maxTicksLimit: 10 } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value: number | string): string | number =>
+              typeof value === 'number' ? '$' + value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value
+          }
+        }
+      }
+    };
+  }
+
+  get barChartOptions() {
+    const fullLabels = this.barChartData()?.labels ?? [];
+    const d = this.barChartData();
+    const colors = this.chartColors;
+    const barColors = d?.values?.map((_, i) => colors[i % colors.length]) ?? [];
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top' as const,
+          labels: {
+            boxWidth: 14,
+            padding: 12,
+            usePointStyle: true
+          },
+          generateLabels: () =>
+            (d?.labels ?? []).map((label, i) => ({
+              text: truncateLegendLabel(label, 20),
+              fillStyle: barColors[i] ?? colors[i % colors.length],
+              strokeStyle: barColors[i] ?? colors[i % colors.length],
+              index: i
+            }))
+        },
+        tooltip: {
+          callbacks: {
+            title: (items: any[]) => {
+              const idx = items[0]?.dataIndex;
+              return idx !== undefined && fullLabels[idx] ? fullLabels[idx] : '';
+            },
+            label: (ctx: any) => {
+              const val = ctx.parsed?.y ?? ctx.raw;
+              const formatted = typeof val === 'number' ? val.toLocaleString(undefined, { maximumFractionDigits: 0 }) : String(val);
+              return 'Units: ' + formatted;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 35, maxTicksLimit: 8 } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value: number | string): string | number =>
+              typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value
+          }
+        }
+      }
+    };
+  }
+
+  pieChartOptions = {
+    responsive: true,
+    plugins: { legend: { display: false } }
+  };
+  chartColors = ['#FF7E5F', '#FD3A69', '#f97316', '#ea580c', '#c2410c', '#9a3412', '#7c2d12'];
+  pieChartColors = [{ backgroundColor: ['#FF7E5F', '#FD3A69', '#f97316', '#ea580c', '#64748b'] }];
 
   removeFile(index: number): void {
     const current = this.selectedFiles();

@@ -71,6 +71,34 @@ table {
   margin: 0 auto;
 }
 
+/* Chart.js container - fixed height so chart renders correctly */
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 12rem;
+}
+.chart-container-lg {
+  min-height: 20rem;
+  height: 22rem;
+}
+@media (min-width: 768px) {
+  .chart-container-lg {
+    min-height: 24rem;
+    height: 26rem;
+  }
+}
+.chart-container canvas {
+  max-width: 100%;
+}
+
+/* Checked Stats: responsive grid layout (line+bar side by side, then 3 pies in a row) */
+.checked-stats-charts {
+  display: block;
+}
+.checked-stats-chart-section {
+  min-width: 0;
+}
+
 /* Drop zone file thumbnails */
 .drop-zone-thumbnail {
   position: relative;
@@ -214,4 +242,42 @@ table {
 .pagination-btn-active:hover:not(:disabled) {
   background: #FD3A69;
   border-color: #FD3A69;
+}
+
+/* Pie legend: one scroll area for the entire list (horizontal + vertical) */
+.pie-legend-dropdown {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+.pie-legend-list-wrap {
+  max-width: 100%;
+  max-height: 10rem;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.pie-legend-list-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.pie-legend-list-wrap::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+.pie-legend-list-wrap::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+.pie-legend-list-wrap::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+.pie-legend-list {
+  width: max-content;
+  min-width: 100%;
+}
+.pie-legend-item {
+  width: max-content;
+}
+.pie-legend-item-content {
+  white-space: nowrap;
 }

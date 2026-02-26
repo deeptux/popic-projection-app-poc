@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { routes } from './app.routes';
 import { spreadsheetsReducer } from './store/spreadsheets/spreadsheets.reducer';
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideStore({ spreadsheets: spreadsheetsReducer }),
-    provideEffects(SpreadsheetsEffects)
+    provideEffects(SpreadsheetsEffects),
+    provideCharts(withDefaultRegisterables())
   ]
 };
