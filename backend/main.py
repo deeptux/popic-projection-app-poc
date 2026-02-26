@@ -1,11 +1,20 @@
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingestion.engine import consolidate_excel_data, ingest_salesforce, merge_rlip_rap
+from analytics.charts import (
+    top_additional_rent_line,
+    top_total_available_units_bar,
+    pie_popic_fee_rlip,
+    pie_popic_fee_rap,
+    pie_popic_fee_comparison,
+)
 
 import io
 import polars as pl
+
+AnalyticsBody = dict  # {"data": list[dict], "columns": list[str]}
 
 
 app = FastAPI()
@@ -73,6 +82,64 @@ async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...), active_t
     if active_tab == "salesforce":
         out["ingestion_metadata"] = result["ingestion_metadata"]
     return out
+
+
+def _analytics_payload(body: AnalyticsBody) -> tuple[list[dict], list[str]]:
+    data = body.get("data") or []
+    columns = body.get("columns") or []
+    if not isinstance(data, list) or not isinstance(columns, list):
+        raise HTTPException(status_code=400, detail="Request body must have 'data' (array) and 'columns' (array).")
+    return data, columns
+
+
+@app.post("/analytics/top-additional-rent-line")
+async def analytics_top_additional_rent_line(body: AnalyticsBody = Body(...)):
+    """Top 7 entities (Captive or Captive+Client) by Additional Rent sum. For line chart."""
+    data, columns = _analytics_payload(body)
+    result = top_additional_rent_line(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/top-total-available-units-bar")
+async def analytics_top_total_available_units_bar(body: AnalyticsBody = Body(...)):
+    """Top 5 entities by Total Available Units (one per entity). For bar chart."""
+    data, columns = _analytics_payload(body)
+    result = top_total_available_units_bar(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/pie-popic-fee-rlip")
+async def analytics_pie_popic_fee_rlip(body: AnalyticsBody = Body(...)):
+    """Top 4 entities by POPIC Fee RLIP sum + Others. For pie chart."""
+    data, columns = _analytics_payload(body)
+    result = pie_popic_fee_rlip(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/pie-popic-fee-rap")
+async def analytics_pie_popic_fee_rap(body: AnalyticsBody = Body(...)):
+    """Top 4 entities by POPIC Fee RAP sum + Others. For pie chart."""
+    data, columns = _analytics_payload(body)
+    result = pie_popic_fee_rap(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/pie-popic-fee-comparison")
+async def analytics_pie_popic_fee_comparison(body: AnalyticsBody = Body(...)):
+    """Two slices: total POPIC Fee RLIP vs total POPIC Fee RAP (percentage of combined)."""
+    data, columns = _analytics_payload(body)
+    result = pie_popic_fee_comparison(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
 
 
 @app.post("/upload/salesforce-captive-summary/merge")
