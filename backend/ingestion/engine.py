@@ -30,12 +30,14 @@ TARGET_COLUMNS = [
     "Other Expenses", "Net Income", "Total Available Units",
     "Enrolled Units", "POPIC Fee RLIP FOF", "POPIC Fee RAP FOF",
     "POPIC Fee RLIP", "POPIC Fee RAP",
+    "POPIC Fee From Parent RLIP", "POPIC Fee From Parent RAP",
+    "Penetration %",
 ]
 
 RLIP_COLUMNS = [c for c in TARGET_COLUMNS if "RLIP" in c]
 RAP_COLUMNS = [c for c in TARGET_COLUMNS if "RAP" in c]
 
-# Same value per (Captive, Client); aggregate by taking one value (e.g. first), not sum. Enrolled Units is additive (sum RLIP + RAP).
+# Same value per (Captive, Client); aggregate by taking one value (e.g. first), not sum. Enrolled Units and Penetration % are additive (sum RLIP + RAP).
 NON_ADDITIVE_COLUMNS = ["Total Available Units"]
 
 # Table columns used for canonical period (first match wins)

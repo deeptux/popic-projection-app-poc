@@ -25,6 +25,7 @@ def normalize_for_match(header: str) -> str:
 _CAPTIVE_KEY_ANY = ("captive", "captiev", "captve", "captiv")
 _CAPTIVE_KEY_ALL = ("name",)
 _CLIENT_KEY_ANY = ("client", "cliant", "clent")
+_SALESPERSON_KEY_ANY = ("salesperson", "sales person", "salesperson")
 
 
 def _key_tokens_match(canonical: str, n_act: str) -> bool:
@@ -39,6 +40,12 @@ def _key_tokens_match(canonical: str, n_act: str) -> bool:
         return True
     if "Client" in canonical or canonical == "Captive Name: Client":
         return any(t in n_act for t in _CLIENT_KEY_ANY)
+    if canonical == "Captive Name":
+        return any(t in n_act for t in _CAPTIVE_KEY_ANY) and any(t in n_act for t in _CAPTIVE_KEY_ALL)
+    if canonical == "Client Name (in POPIC)":
+        return any(t in n_act for t in _CLIENT_KEY_ANY) and "name" in n_act
+    if canonical == "Salesperson":
+        return any(t in n_act for t in _SALESPERSON_KEY_ANY)
     return False
 
 

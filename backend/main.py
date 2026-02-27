@@ -3,6 +3,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingestion.engine import consolidate_excel_data, ingest_salesforce, merge_rlip_rap
+from ingestion.commission import ingest_commission
 from analytics.charts import (
     top_additional_rent_line,
     top_total_available_units_bar,
@@ -82,6 +83,39 @@ async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...), active_t
     if active_tab == "salesforce":
         out["ingestion_metadata"] = result["ingestion_metadata"]
     return out
+
+
+@app.post("/upload/commission-report/basic")
+async def Upload_CommissionReportBasic(file: UploadFile = File(...)):
+    """Raw commission report: read Excel and return data/columns without ETL."""
+    contents = await file.read()
+    df = pl.read_excel(io.BytesIO(contents))
+    df = df.fill_nan(None)
+    return {
+        "filename": file.filename,
+        "total_rows": len(df),
+        "columns": df.columns,
+        "data": df.to_dicts(),
+    }
+
+
+@app.post("/upload/commission-report")
+async def Upload_CommissionReport(file: UploadFile = File(...)):
+    """Cleaned commission report: run ETL (group by Salesperson, Captive, Client; filter subtotals)."""
+    contents = await file.read()
+    try:
+        result = ingest_commission(contents, filename=file.filename or None)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    data = result["data"]
+    columns = result.get("columns", list(data[0].keys()) if data else [])
+    return {
+        "filename": file.filename,
+        "total_rows": len(data),
+        "columns": columns,
+        "data": data,
+        "ingestion_metadata": result.get("ingestion_metadata", {}),
+    }
 
 
 def _analytics_payload(body: AnalyticsBody) -> tuple[list[dict], list[str]]:
