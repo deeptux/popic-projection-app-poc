@@ -9,7 +9,15 @@ import {
   cleanedFileError,
   setSelectedRawIndex,
   setSelectedCleanedIndex,
-  resetSpreadsheetsUpload
+  resetSpreadsheetsUpload,
+  setCommissionRawSlots,
+  setCommissionCleanedSlots,
+  commissionRawFileSuccess,
+  commissionRawFileError,
+  commissionCleanedFileSuccess,
+  commissionCleanedFileError,
+  setSelectedCommissionRawIndex,
+  setSelectedCommissionCleanedIndex,
 } from './spreadsheets.actions';
 
 export interface SpreadsheetsState {
@@ -17,13 +25,21 @@ export interface SpreadsheetsState {
   cleanedFileResults: FileResultSlot[];
   selectedRawIndex: number;
   selectedCleanedIndex: number;
+  commissionRawFileResults: FileResultSlot[];
+  commissionCleanedFileResults: FileResultSlot[];
+  selectedCommissionRawIndex: number;
+  selectedCommissionCleanedIndex: number;
 }
 
 const initialState: SpreadsheetsState = {
   rawFileResults: [],
   cleanedFileResults: [],
   selectedRawIndex: 0,
-  selectedCleanedIndex: 0
+  selectedCleanedIndex: 0,
+  commissionRawFileResults: [],
+  commissionCleanedFileResults: [],
+  selectedCommissionRawIndex: 0,
+  selectedCommissionCleanedIndex: 0,
 };
 
 export const spreadsheetsReducer = createReducer(
@@ -98,5 +114,61 @@ export const spreadsheetsReducer = createReducer(
     ...state,
     selectedCleanedIndex: index
   })),
-  on(resetSpreadsheetsUpload, () => initialState)
+  on(resetSpreadsheetsUpload, () => initialState),
+  on(setCommissionRawSlots, (state, { filenames }) => ({
+    ...state,
+    commissionRawFileResults: filenames.map(filename => ({ filename, loading: true })),
+    selectedCommissionRawIndex: 0,
+  })),
+  on(commissionRawFileSuccess, (state, { index, result }) => {
+    const next = [...state.commissionRawFileResults];
+    if (next[index]) {
+      next[index] = {
+        filename: result.filename,
+        loading: false,
+        data: result.data,
+        columns: result.columns,
+      };
+    }
+    return { ...state, commissionRawFileResults: next };
+  }),
+  on(commissionRawFileError, (state, { index, error }) => {
+    const next = [...state.commissionRawFileResults];
+    if (next[index]) {
+      next[index] = { ...next[index], loading: false, error: error || 'Upload failed' };
+    }
+    return { ...state, commissionRawFileResults: next };
+  }),
+  on(setCommissionCleanedSlots, (state, { filenames }) => ({
+    ...state,
+    commissionCleanedFileResults: filenames.map(filename => ({ filename, loading: true })),
+    selectedCommissionCleanedIndex: 0,
+  })),
+  on(commissionCleanedFileSuccess, (state, { index, result }) => {
+    const next = [...state.commissionCleanedFileResults];
+    if (next[index]) {
+      next[index] = {
+        filename: result.filename,
+        loading: false,
+        data: result.data,
+        columns: result.columns,
+      };
+    }
+    return { ...state, commissionCleanedFileResults: next };
+  }),
+  on(commissionCleanedFileError, (state, { index, error }) => {
+    const next = [...state.commissionCleanedFileResults];
+    if (next[index]) {
+      next[index] = { ...next[index], loading: false, error: error || 'Upload failed' };
+    }
+    return { ...state, commissionCleanedFileResults: next };
+  }),
+  on(setSelectedCommissionRawIndex, (state, { index }) => ({
+    ...state,
+    selectedCommissionRawIndex: index,
+  })),
+  on(setSelectedCommissionCleanedIndex, (state, { index }) => ({
+    ...state,
+    selectedCommissionCleanedIndex: index,
+  })),
 );

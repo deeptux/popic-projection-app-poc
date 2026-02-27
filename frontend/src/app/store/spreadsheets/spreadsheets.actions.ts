@@ -72,3 +72,45 @@ export const setSelectedCleanedIndex = createAction(
 export const resetSpreadsheetsUpload = createAction(
   '[Spreadsheets] Reset Upload'
 );
+
+// --- Commission-specific (same shape as above, separate state) ---
+export const setCommissionRawSlots = createAction(
+  '[Spreadsheets] Set Commission Raw Slots',
+  props<{ filenames: string[] }>()
+);
+export const setCommissionCleanedSlots = createAction(
+  '[Spreadsheets] Set Commission Cleaned Slots',
+  props<{ filenames: string[] }>()
+);
+export const commissionRawFileSuccess = createAction(
+  '[Spreadsheets] Commission Raw File Success',
+  props<{ index: number; result: SpreadsheetsResponse }>()
+);
+export const commissionRawFileError = createAction(
+  '[Spreadsheets] Commission Raw File Error',
+  props<{ index: number; error: string }>()
+);
+export const commissionCleanedFileSuccess = createAction(
+  '[Spreadsheets] Commission Cleaned File Success',
+  props<{ index: number; result: SpreadsheetsResponse }>()
+);
+export const commissionCleanedFileError = createAction(
+  '[Spreadsheets] Commission Cleaned File Error',
+  props<{ index: number; error: string }>()
+);
+export const uploadCommissionRawFiles = createAction(
+  '[Spreadsheets] Upload Commission Raw Files',
+  props<{ files: File[] }>()
+);
+export const uploadCommissionCleanedFiles = createAction(
+  '[Spreadsheets] Upload Commission Cleaned Files',
+  props<{ files: File[] }>()
+);
+export const setSelectedCommissionRawIndex = createAction(
+  '[Spreadsheets] Set Selected Commission Raw Index',
+  props<{ index: number }>()
+);
+export const setSelectedCommissionCleanedIndex = createAction(
+  '[Spreadsheets] Set Selected Commission Cleaned Index',
+  props<{ index: number }>()
+);

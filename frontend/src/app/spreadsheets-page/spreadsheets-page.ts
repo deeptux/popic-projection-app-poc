@@ -18,16 +18,27 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin } from 'rxjs';
 
+import { SpreadsheetDataTableComponent } from '../shared/spreadsheet-data-table';
+
 import {
   selectRawFileResults,
   selectCleanedFileResults,
   selectSelectedRawIndex,
   selectSelectedCleanedIndex,
   selectHasAnyRawResult,
+  selectCommissionRawFileResults,
+  selectCommissionCleanedFileResults,
+  selectSelectedCommissionRawIndex,
+  selectSelectedCommissionCleanedIndex,
+  selectHasAnyCommissionRawResult,
   uploadRawFiles,
   uploadCleanedFiles,
+  uploadCommissionRawFiles,
+  uploadCommissionCleanedFiles,
   setSelectedRawIndex,
   setSelectedCleanedIndex,
+  setSelectedCommissionRawIndex,
+  setSelectedCommissionCleanedIndex,
   resetSpreadsheetsUpload
 } from '../store/spreadsheets';
 
@@ -134,7 +145,7 @@ interface AnalyticsCacheEntry {
 @Component({
   selector: 'app-spreadsheets-page',
   standalone: true,
-  imports: [CommonModule, MatTableModule, RouterModule, BaseChartDirective],
+  imports: [CommonModule, MatTableModule, RouterModule, BaseChartDirective, SpreadsheetDataTableComponent],
   templateUrl: './spreadsheets-page.html',
   styleUrl: './spreadsheets-page.css'
 })
@@ -143,13 +154,16 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
 
   @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('commissionFileInput') commissionFileInputRef?: ElementRef<HTMLInputElement>;
 
   activeTab: 'salesforce' | 'commissions' | 'referral' = 'salesforce';
   salesforceSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
+  commissionSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
 
   readonly selectedFiles = signal<File[]>([]);
   readonly fileTypeError = signal<string | null>(null);
   private filesForCleanedRequest: File[] = [];
+  private filesForCommissionCleanedRequest: File[] = [];
 
   selectedFile: File | null = null;
   commissionsDataSource: any[] = [];
@@ -157,17 +171,34 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   referralDataSource: any[] = [];
   referralColumns: string[] = [];
 
+  /** Column keys that show a filter dropdown instead of sort in Commission Cleaned Data table */
+  readonly commissionFilterableColumns: string[] = ['Salesperson', 'Income Type'];
+  /** Column keys that should not use comma formatting (e.g. Year) in Commission Cleaned Data table */
+  readonly commissionExcludeFormatColumns: string[] = ['Year'];
+  /** Column keys displayed as percentage (× 100 + '%') in Salesforce Cleaned Data table */
+  readonly salesforcePercentageColumns: string[] = ['Penetration %'];
+
   readonly rawFileResults = toSignal(this.store.select(selectRawFileResults), { initialValue: [] });
   readonly cleanedFileResults = toSignal(this.store.select(selectCleanedFileResults), { initialValue: [] });
   readonly selectedRawIndex = toSignal(this.store.select(selectSelectedRawIndex), { initialValue: 0 });
   readonly selectedCleanedIndex = toSignal(this.store.select(selectSelectedCleanedIndex), { initialValue: 0 });
   readonly hasAnyRawResult = toSignal(this.store.select(selectHasAnyRawResult), { initialValue: false });
 
+  readonly commissionRawFileResults = toSignal(this.store.select(selectCommissionRawFileResults), { initialValue: [] });
+  readonly commissionCleanedFileResults = toSignal(this.store.select(selectCommissionCleanedFileResults), { initialValue: [] });
+  readonly selectedCommissionRawIndex = toSignal(this.store.select(selectSelectedCommissionRawIndex), { initialValue: 0 });
+  readonly selectedCommissionCleanedIndex = toSignal(this.store.select(selectSelectedCommissionCleanedIndex), { initialValue: 0 });
+  readonly hasAnyCommissionRawResult = toSignal(this.store.select(selectHasAnyCommissionRawResult), { initialValue: false });
+
   readonly canUpload = computed(() => this.selectedFiles().length > 0);
   readonly rawSlotCount = computed(() => this.rawFileResults().length);
   readonly cleanedSlotCount = computed(() => this.cleanedFileResults().length);
   readonly hasRawSubTabs = computed(() => this.rawSlotCount() >= 2);
   readonly hasCleanedSubTabs = computed(() => this.cleanedSlotCount() >= 2);
+  readonly commissionRawSlotCount = computed(() => this.commissionRawFileResults().length);
+  readonly commissionCleanedSlotCount = computed(() => this.commissionCleanedFileResults().length);
+  readonly hasCommissionRawSubTabs = computed(() => this.commissionRawSlotCount() >= 2);
+  readonly hasCommissionCleanedSubTabs = computed(() => this.commissionCleanedSlotCount() >= 2);
 
   readonly currentRawSlot = computed(() => {
     const slots = this.rawFileResults();
@@ -178,6 +209,18 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly currentCleanedSlot = computed(() => {
     const slots = this.cleanedFileResults();
     const idx = this.selectedCleanedIndex();
+    return slots[idx] ?? null;
+  });
+
+  readonly currentCommissionRawSlot = computed(() => {
+    const slots = this.commissionRawFileResults();
+    const idx = this.selectedCommissionRawIndex();
+    return slots[idx] ?? null;
+  });
+
+  readonly currentCommissionCleanedSlot = computed(() => {
+    const slots = this.commissionCleanedFileResults();
+    const idx = this.selectedCommissionCleanedIndex();
     return slots[idx] ?? null;
   });
 
@@ -197,6 +240,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly cleanedSortState = signal<Array<{ columnKey: string | null; direction: 'asc' | 'desc' }>>([]);
   readonly cleanedPageIndex = signal<number[]>([]);
   readonly cleanedPageSize = signal<number[]>([]);
+  readonly commissionCleanedSearchTerms = signal<string[]>([]);
 
   readonly CLEANED_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -304,6 +348,10 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     this.fileInputRef?.nativeElement?.click();
   }
 
+  triggerCommissionFileInput(): void {
+    this.commissionFileInputRef?.nativeElement?.click();
+  }
+
   uploadFile(): void {
     if (this.activeTab === 'salesforce') {
       const files = this.selectedFiles();
@@ -324,20 +372,32 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       this.selectedFiles.set([]);
       return;
     }
-    if (this.activeTab === 'commissions' || this.activeTab === 'referral') {
-      if (!this.selectedFile) return;
-      const formData = new FormData();
-      formData.append('file', this.selectedFile);
-      formData.append('active_tab', this.activeTab);
+    if (this.activeTab === 'commissions') {
+      const files = this.selectedFiles();
+      if (files.length === 0) return;
+      const { valid, error } = validateFiles(files);
+      if (error) {
+        this.fileTypeError.set(error);
+        return;
+      }
+      this.fileTypeError.set(null);
+      this.filesForCommissionCleanedRequest = [...valid];
+      this.store.dispatch(setSelectedCommissionRawIndex({ index: 0 }));
+      this.store.dispatch(setSelectedCommissionCleanedIndex({ index: 0 }));
+      this.commissionSubTab = 'raw';
+      this.store.dispatch(uploadCommissionRawFiles({ files: valid }));
+      this.selectedFiles.set([]);
+      return;
+    }
+    if (this.activeTab === 'referral') {
+    if (!this.selectedFile) return;
+    const formData = new FormData();
+    formData.append('file', this.selectedFile);
+    formData.append('active_tab', this.activeTab);
       this.http.post<SpreadsheetsResponse>(API_BASIC, formData).subscribe({
         next: (res) => {
-          if (this.activeTab === 'commissions') {
-            this.commissionsDataSource = res.data;
-            this.commissionsColumns = res.columns;
-          } else {
-            this.referralDataSource = res.data;
-            this.referralColumns = res.columns;
-          }
+          this.referralDataSource = res.data;
+          this.referralColumns = res.columns;
           this.selectedFile = null;
         },
         error: (err) => {
@@ -354,6 +414,32 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   setCleanedSubTab(index: number): void {
     this.store.dispatch(setSelectedCleanedIndex({ index }));
+  }
+
+  setCommissionRawSubTab(index: number): void {
+    this.store.dispatch(setSelectedCommissionRawIndex({ index }));
+  }
+
+  setCommissionCleanedSubTab(index: number): void {
+    this.store.dispatch(setSelectedCommissionCleanedIndex({ index }));
+  }
+
+  onCommissionRawDataTabClick(): void {
+    this.commissionSubTab = 'raw';
+  }
+
+  onCommissionCleanedDataTabClick(): void {
+    this.commissionSubTab = 'cleanedData';
+    if (this.filesForCommissionCleanedRequest.length > 0 && this.commissionCleanedFileResults().length === 0) {
+      this.store.dispatch(uploadCommissionCleanedFiles({ files: this.filesForCommissionCleanedRequest }));
+    }
+  }
+
+  onCommissionCheckedStatsTabClick(): void {
+    this.commissionSubTab = 'checkedStats';
+    if (this.filesForCommissionCleanedRequest.length > 0 && this.commissionCleanedFileResults().length === 0) {
+      this.store.dispatch(uploadCommissionCleanedFiles({ files: this.filesForCommissionCleanedRequest }));
+    }
   }
 
   onRawDataTabClick(): void {
@@ -705,6 +791,37 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   getCleanedTotalRows(slot: { data?: any[]; columns?: string[] } | null): number {
     return this.getCleanedTableData(slot).length;
+  }
+
+  getCommissionCleanedTableData(slot: { data?: any[]; columns?: string[] } | null): any[] {
+    if (!slot?.data?.length || !slot?.columns?.length) return [];
+    const data = slot.data;
+    const columns = slot.columns;
+    const idx = this.selectedCommissionCleanedIndex();
+    const search = (this.commissionCleanedSearchTerms()[idx] ?? '').trim().toLowerCase();
+    if (!search) return [...data];
+    return data.filter(row =>
+      columns.some(col => String(row[col] ?? '').toLowerCase().includes(search))
+    );
+  }
+
+  setCommissionCleanedSearch(value: string): void {
+    const idx = this.selectedCommissionCleanedIndex();
+    this.commissionCleanedSearchTerms.update(terms => {
+      const next = [...terms];
+      while (next.length <= idx) next.push('');
+      next[idx] = value;
+      return next;
+    });
+  }
+
+  getCommissionCleanedSearch(): string {
+    const idx = this.selectedCommissionCleanedIndex();
+    return this.commissionCleanedSearchTerms()[idx] ?? '';
+  }
+
+  getCommissionCleanedTotalRows(slot: { data?: any[]; columns?: string[] } | null): number {
+    return this.getCommissionCleanedTableData(slot).length;
   }
 
   getCleanedTotalPages(slot: { data?: any[]; columns?: string[] } | null): number {

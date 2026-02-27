@@ -24,6 +24,41 @@ export const selectSelectedCleanedIndex = createSelector(
   state => state.selectedCleanedIndex
 );
 
+export const selectCommissionRawFileResults = createSelector(
+  selectSpreadsheetsState,
+  state => state.commissionRawFileResults
+);
+
+export const selectCommissionCleanedFileResults = createSelector(
+  selectSpreadsheetsState,
+  state => state.commissionCleanedFileResults
+);
+
+export const selectSelectedCommissionRawIndex = createSelector(
+  selectSpreadsheetsState,
+  state => state.selectedCommissionRawIndex
+);
+
+export const selectSelectedCommissionCleanedIndex = createSelector(
+  selectSpreadsheetsState,
+  state => state.selectedCommissionCleanedIndex
+);
+
+export const selectHasAnyCommissionRawResult = createSelector(
+  selectCommissionRawFileResults,
+  slots => slots.length > 0
+);
+
+export const selectCommissionRawSlotCount = createSelector(
+  selectCommissionRawFileResults,
+  slots => slots.length
+);
+
+export const selectCommissionCleanedSlotCount = createSelector(
+  selectCommissionCleanedFileResults,
+  slots => slots.length
+);
+
 export const selectHasAnyRawResult = createSelector(
   selectRawFileResults,
   slots => slots.length > 0
