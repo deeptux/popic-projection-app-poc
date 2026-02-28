@@ -31,14 +31,23 @@ import {
   selectSelectedCommissionRawIndex,
   selectSelectedCommissionCleanedIndex,
   selectHasAnyCommissionRawResult,
+  selectReferralRawFileResults,
+  selectReferralCleanedFileResults,
+  selectSelectedReferralRawIndex,
+  selectSelectedReferralCleanedIndex,
+  selectHasAnyReferralRawResult,
   uploadRawFiles,
   uploadCleanedFiles,
   uploadCommissionRawFiles,
   uploadCommissionCleanedFiles,
+  uploadReferralRawFiles,
+  uploadReferralCleanedFiles,
   setSelectedRawIndex,
   setSelectedCleanedIndex,
   setSelectedCommissionRawIndex,
   setSelectedCommissionCleanedIndex,
+  setSelectedReferralRawIndex,
+  setSelectedReferralCleanedIndex,
   resetSpreadsheetsUpload
 } from '../store/spreadsheets';
 
@@ -155,15 +164,18 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('commissionFileInput') commissionFileInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('referralFileInput') referralFileInputRef?: ElementRef<HTMLInputElement>;
 
   activeTab: 'salesforce' | 'commissions' | 'referral' = 'salesforce';
   salesforceSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
   commissionSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
+  referralSubTab: 'raw' | 'cleanedData' | 'checkedStats' = 'raw';
 
   readonly selectedFiles = signal<File[]>([]);
   readonly fileTypeError = signal<string | null>(null);
   private filesForCleanedRequest: File[] = [];
   private filesForCommissionCleanedRequest: File[] = [];
+  private filesForReferralCleanedRequest: File[] = [];
 
   selectedFile: File | null = null;
   commissionsDataSource: any[] = [];
@@ -177,6 +189,12 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly commissionExcludeFormatColumns: string[] = ['Year'];
   /** Column keys displayed as percentage (× 100 + '%') in Salesforce Cleaned Data table */
   readonly salesforcePercentageColumns: string[] = ['Penetration %'];
+  /** Referral Cleaned Data: filter dropdown (with search) instead of sort */
+  readonly referralFilterableColumns: string[] = ['Vendor'];
+  /** Referral Cleaned Data: display as percentage (× 100 + '%') */
+  readonly referralPercentageColumns: string[] = ['Referral Fee %'];
+  /** Referral Cleaned Data: no comma formatting (e.g. Year) */
+  readonly referralExcludeFormatColumns: string[] = ['Year'];
 
   readonly rawFileResults = toSignal(this.store.select(selectRawFileResults), { initialValue: [] });
   readonly cleanedFileResults = toSignal(this.store.select(selectCleanedFileResults), { initialValue: [] });
@@ -190,6 +208,12 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly selectedCommissionCleanedIndex = toSignal(this.store.select(selectSelectedCommissionCleanedIndex), { initialValue: 0 });
   readonly hasAnyCommissionRawResult = toSignal(this.store.select(selectHasAnyCommissionRawResult), { initialValue: false });
 
+  readonly referralRawFileResults = toSignal(this.store.select(selectReferralRawFileResults), { initialValue: [] });
+  readonly referralCleanedFileResults = toSignal(this.store.select(selectReferralCleanedFileResults), { initialValue: [] });
+  readonly selectedReferralRawIndex = toSignal(this.store.select(selectSelectedReferralRawIndex), { initialValue: 0 });
+  readonly selectedReferralCleanedIndex = toSignal(this.store.select(selectSelectedReferralCleanedIndex), { initialValue: 0 });
+  readonly hasAnyReferralRawResult = toSignal(this.store.select(selectHasAnyReferralRawResult), { initialValue: false });
+
   readonly canUpload = computed(() => this.selectedFiles().length > 0);
   readonly rawSlotCount = computed(() => this.rawFileResults().length);
   readonly cleanedSlotCount = computed(() => this.cleanedFileResults().length);
@@ -199,6 +223,11 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly commissionCleanedSlotCount = computed(() => this.commissionCleanedFileResults().length);
   readonly hasCommissionRawSubTabs = computed(() => this.commissionRawSlotCount() >= 2);
   readonly hasCommissionCleanedSubTabs = computed(() => this.commissionCleanedSlotCount() >= 2);
+
+  readonly referralRawSlotCount = computed(() => this.referralRawFileResults().length);
+  readonly referralCleanedSlotCount = computed(() => this.referralCleanedFileResults().length);
+  readonly hasReferralRawSubTabs = computed(() => this.referralRawSlotCount() >= 2);
+  readonly hasReferralCleanedSubTabs = computed(() => this.referralCleanedSlotCount() >= 2);
 
   readonly currentRawSlot = computed(() => {
     const slots = this.rawFileResults();
@@ -221,6 +250,18 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly currentCommissionCleanedSlot = computed(() => {
     const slots = this.commissionCleanedFileResults();
     const idx = this.selectedCommissionCleanedIndex();
+    return slots[idx] ?? null;
+  });
+
+  readonly currentReferralRawSlot = computed(() => {
+    const slots = this.referralRawFileResults();
+    const idx = this.selectedReferralRawIndex();
+    return slots[idx] ?? null;
+  });
+
+  readonly currentReferralCleanedSlot = computed(() => {
+    const slots = this.referralCleanedFileResults();
+    const idx = this.selectedReferralCleanedIndex();
     return slots[idx] ?? null;
   });
 
@@ -352,6 +393,10 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     this.commissionFileInputRef?.nativeElement?.click();
   }
 
+  triggerReferralFileInput(): void {
+    this.referralFileInputRef?.nativeElement?.click();
+  }
+
   uploadFile(): void {
     if (this.activeTab === 'salesforce') {
       const files = this.selectedFiles();
@@ -390,21 +435,21 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       return;
     }
     if (this.activeTab === 'referral') {
-    if (!this.selectedFile) return;
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-    formData.append('active_tab', this.activeTab);
-      this.http.post<SpreadsheetsResponse>(API_BASIC, formData).subscribe({
-        next: (res) => {
-          this.referralDataSource = res.data;
-          this.referralColumns = res.columns;
-          this.selectedFile = null;
-        },
-        error: (err) => {
-          console.error('Upload error:', err);
-          alert('Upload failed. Check if the backend is running at ' + API_BASIC);
-        }
-      });
+      const files = this.selectedFiles();
+      if (files.length === 0) return;
+      const { valid, error } = validateFiles(files);
+      if (error) {
+        this.fileTypeError.set(error);
+        return;
+      }
+      this.fileTypeError.set(null);
+      this.filesForReferralCleanedRequest = [...valid];
+      this.store.dispatch(setSelectedReferralRawIndex({ index: 0 }));
+      this.store.dispatch(setSelectedReferralCleanedIndex({ index: 0 }));
+      this.referralSubTab = 'raw';
+      this.store.dispatch(uploadReferralRawFiles({ files: valid }));
+      this.selectedFiles.set([]);
+      return;
     }
   }
 
@@ -424,6 +469,14 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     this.store.dispatch(setSelectedCommissionCleanedIndex({ index }));
   }
 
+  setReferralRawSubTab(index: number): void {
+    this.store.dispatch(setSelectedReferralRawIndex({ index }));
+  }
+
+  setReferralCleanedSubTab(index: number): void {
+    this.store.dispatch(setSelectedReferralCleanedIndex({ index }));
+  }
+
   onCommissionRawDataTabClick(): void {
     this.commissionSubTab = 'raw';
   }
@@ -439,6 +492,24 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     this.commissionSubTab = 'checkedStats';
     if (this.filesForCommissionCleanedRequest.length > 0 && this.commissionCleanedFileResults().length === 0) {
       this.store.dispatch(uploadCommissionCleanedFiles({ files: this.filesForCommissionCleanedRequest }));
+    }
+  }
+
+  onReferralRawDataTabClick(): void {
+    this.referralSubTab = 'raw';
+  }
+
+  onReferralCleanedDataTabClick(): void {
+    this.referralSubTab = 'cleanedData';
+    if (this.filesForReferralCleanedRequest.length > 0 && this.referralCleanedFileResults().length === 0) {
+      this.store.dispatch(uploadReferralCleanedFiles({ files: this.filesForReferralCleanedRequest }));
+    }
+  }
+
+  onReferralCheckedStatsTabClick(): void {
+    this.referralSubTab = 'checkedStats';
+    if (this.filesForReferralCleanedRequest.length > 0 && this.referralCleanedFileResults().length === 0) {
+      this.store.dispatch(uploadReferralCleanedFiles({ files: this.filesForReferralCleanedRequest }));
     }
   }
 

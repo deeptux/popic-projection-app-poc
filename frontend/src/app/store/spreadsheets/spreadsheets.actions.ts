@@ -114,3 +114,45 @@ export const setSelectedCommissionCleanedIndex = createAction(
   '[Spreadsheets] Set Selected Commission Cleaned Index',
   props<{ index: number }>()
 );
+
+// --- Referral-specific (same shape as Commission, separate state) ---
+export const setReferralRawSlots = createAction(
+  '[Spreadsheets] Set Referral Raw Slots',
+  props<{ filenames: string[] }>()
+);
+export const setReferralCleanedSlots = createAction(
+  '[Spreadsheets] Set Referral Cleaned Slots',
+  props<{ filenames: string[] }>()
+);
+export const referralRawFileSuccess = createAction(
+  '[Spreadsheets] Referral Raw File Success',
+  props<{ index: number; result: SpreadsheetsResponse }>()
+);
+export const referralRawFileError = createAction(
+  '[Spreadsheets] Referral Raw File Error',
+  props<{ index: number; error: string }>()
+);
+export const referralCleanedFileSuccess = createAction(
+  '[Spreadsheets] Referral Cleaned File Success',
+  props<{ index: number; result: SpreadsheetsResponse }>()
+);
+export const referralCleanedFileError = createAction(
+  '[Spreadsheets] Referral Cleaned File Error',
+  props<{ index: number; error: string }>()
+);
+export const uploadReferralRawFiles = createAction(
+  '[Spreadsheets] Upload Referral Raw Files',
+  props<{ files: File[] }>()
+);
+export const uploadReferralCleanedFiles = createAction(
+  '[Spreadsheets] Upload Referral Cleaned Files',
+  props<{ files: File[] }>()
+);
+export const setSelectedReferralRawIndex = createAction(
+  '[Spreadsheets] Set Selected Referral Raw Index',
+  props<{ index: number }>()
+);
+export const setSelectedReferralCleanedIndex = createAction(
+  '[Spreadsheets] Set Selected Referral Cleaned Index',
+  props<{ index: number }>()
+);
