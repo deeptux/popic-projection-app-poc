@@ -151,6 +151,12 @@ interface AnalyticsCacheEntry {
   pieCompare: { label: string; value: number; percent: number }[];
 }
 
+/** Cached commission analytics per file index (Checked Stats sub-tabs). */
+interface CommissionAnalyticsCacheEntry {
+  line: { labels: string[]; values: number[] } | null;
+  bar: { labels: string[]; values: number[] } | null;
+}
+
 @Component({
   selector: 'app-spreadsheets-page',
   standalone: true,
@@ -274,8 +280,17 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly pieRapData = signal<{ label: string; value: number; percent: number }[] | null>(null);
   readonly pieCompareData = signal<{ label: string; value: number; percent: number }[] | null>(null);
 
+  /** Commission Checked Stats: loading/error and chart data (monthly Commission line, monthly P&L bar). */
+  readonly commissionCheckedStatsTabActive = signal(false);
+  readonly commissionCheckedStatsLoading = signal(false);
+  readonly commissionCheckedStatsError = signal<string | null>(null);
+  readonly commissionMonthlyCommissionData = signal<{ labels: string[]; values: number[] } | null>(null);
+  readonly commissionMonthlyPnlData = signal<{ labels: string[]; values: number[] } | null>(null);
+
   /** Per-file analytics cache (key = selectedCleanedIndex). Cleared on new upload. */
   private readonly analyticsCache = new Map<number, AnalyticsCacheEntry>();
+  /** Per-file commission analytics cache (key = selectedCommissionCleanedIndex). */
+  private readonly commissionAnalyticsCache = new Map<number, CommissionAnalyticsCacheEntry>();
 
   readonly cleanedSearchTerms = signal<string[]>([]);
   readonly cleanedSortState = signal<Array<{ columnKey: string | null; direction: 'asc' | 'desc' }>>([]);
@@ -308,6 +323,27 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       }
       this.loadCheckedStatsCharts({ data: slot.data, columns: slot.columns }, idx);
     });
+
+    effect(() => {
+      if (!this.commissionCheckedStatsTabActive()) return;
+      const idx = this.selectedCommissionCleanedIndex();
+      const slot = this.currentCommissionCleanedSlot();
+      if (!slot?.data?.length || !slot?.columns?.length) {
+        this.commissionMonthlyCommissionData.set(null);
+        this.commissionMonthlyPnlData.set(null);
+        this.commissionCheckedStatsError.set(null);
+        return;
+      }
+      const cached = this.commissionAnalyticsCache.get(idx);
+      if (cached) {
+        this.commissionMonthlyCommissionData.set(cached.line);
+        this.commissionMonthlyPnlData.set(cached.bar);
+        this.commissionCheckedStatsLoading.set(false);
+        this.commissionCheckedStatsError.set(null);
+        return;
+      }
+      this.loadCommissionCheckedStatsCharts({ data: slot.data, columns: slot.columns }, idx);
+    });
   }
 
   private applyCachedAnalytics(cached: AnalyticsCacheEntry): void {
@@ -329,7 +365,15 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     this.checkedStatsLoading.set(false);
   }
 
-  ngOnInit(): void {}
+  private clearCommissionAnalyticsCacheAndCharts(): void {
+    this.commissionAnalyticsCache.clear();
+    this.commissionMonthlyCommissionData.set(null);
+    this.commissionMonthlyPnlData.set(null);
+    this.commissionCheckedStatsError.set(null);
+    this.commissionCheckedStatsLoading.set(false);
+  }
+
+  ngOnInit(): void { }
 
   ngOnDestroy(): void {
     this.store.dispatch(resetSpreadsheetsUpload());
@@ -427,6 +471,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       }
       this.fileTypeError.set(null);
       this.filesForCommissionCleanedRequest = [...valid];
+      this.clearCommissionAnalyticsCacheAndCharts();
       this.store.dispatch(setSelectedCommissionRawIndex({ index: 0 }));
       this.store.dispatch(setSelectedCommissionCleanedIndex({ index: 0 }));
       this.commissionSubTab = 'raw';
@@ -479,10 +524,12 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   onCommissionRawDataTabClick(): void {
     this.commissionSubTab = 'raw';
+    this.commissionCheckedStatsTabActive.set(false);
   }
 
   onCommissionCleanedDataTabClick(): void {
     this.commissionSubTab = 'cleanedData';
+    this.commissionCheckedStatsTabActive.set(false);
     if (this.filesForCommissionCleanedRequest.length > 0 && this.commissionCleanedFileResults().length === 0) {
       this.store.dispatch(uploadCommissionCleanedFiles({ files: this.filesForCommissionCleanedRequest }));
     }
@@ -490,6 +537,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   onCommissionCheckedStatsTabClick(): void {
     this.commissionSubTab = 'checkedStats';
+    this.commissionCheckedStatsTabActive.set(true);
     if (this.filesForCommissionCleanedRequest.length > 0 && this.commissionCleanedFileResults().length === 0) {
       this.store.dispatch(uploadCommissionCleanedFiles({ files: this.filesForCommissionCleanedRequest }));
     }
@@ -577,7 +625,28 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
     });
   }
 
-  getLineChartChartData(): { labels: string[]; datasets: { data: number[]; label: string; [key: string]: unknown }[] } | null {
+  loadCommissionCheckedStatsCharts(slot: AnalyticsSlot, fileIndex: number): void {
+    this.commissionCheckedStatsError.set(null);
+    this.commissionCheckedStatsLoading.set(true);
+    const body = { data: slot.data, columns: slot.columns };
+    forkJoin({
+      line: this.http.post<{ labels: string[]; values: number[] }>(`${API_ANALYTICS}/commission-monthly-commission-line`, body),
+      bar: this.http.post<{ labels: string[]; values: number[] }>(`${API_ANALYTICS}/commission-monthly-pnl-bar`, body)
+    }).subscribe({
+      next: res => {
+        this.commissionMonthlyCommissionData.set(res.line);
+        this.commissionMonthlyPnlData.set(res.bar);
+        this.commissionAnalyticsCache.set(fileIndex, { line: res.line, bar: res.bar });
+        this.commissionCheckedStatsLoading.set(false);
+      },
+      error: err => {
+        this.commissionCheckedStatsError.set(err?.error?.detail || err?.message || 'Commission analytics request failed');
+        this.commissionCheckedStatsLoading.set(false);
+      }
+    });
+  }
+
+  getLineChartChartData(): { labels: string[]; datasets: { data: number[]; label: string;[key: string]: unknown }[] } | null {
     const d = this.lineChartData();
     if (!d?.labels?.length) return null;
     return {
@@ -608,6 +677,44 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       datasets: [{
         data: d.values,
         label: 'Total Available Units',
+        backgroundColor: barColors
+      }]
+    };
+  }
+
+  /** Commission Checked Stats: line chart data (January–December Commission totals). */
+  getCommissionLineChartChartData(): { labels: string[]; datasets: { data: number[]; label: string;[key: string]: unknown }[] } | null {
+    const d = this.commissionMonthlyCommissionData();
+    if (!d?.labels?.length) return null;
+    return {
+      labels: d.labels,
+      datasets: [{
+        data: d.values,
+        label: 'Commission',
+        fill: true,
+        backgroundColor: 'rgba(255, 126, 95, 0.15)',
+        borderColor: '#FF7E5F',
+        pointBackgroundColor: '#FF7E5F',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.4
+      }]
+    };
+  }
+
+  /** Commission Checked Stats: bar chart data (January–December P&L totals). */
+  getCommissionBarChartChartData(): { labels: string[]; datasets: { data: number[]; label: string; backgroundColor: string[] }[] } | null {
+    const d = this.commissionMonthlyPnlData();
+    if (!d?.labels?.length) return null;
+    const colors = this.chartColors;
+    const barColors = d.values.map((_, i) => colors[i % colors.length]);
+    return {
+      labels: d.labels,
+      datasets: [{
+        data: d.values,
+        label: 'P&L',
         backgroundColor: barColors
       }]
     };
@@ -720,6 +827,76 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
           ticks: {
             callback: (value: number | string): string | number =>
               typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value
+          }
+        }
+      }
+    };
+  }
+
+  /** Commission Checked Stats: line chart options (months on X, $ in tooltip). */
+  get commissionLineChartOptions() {
+    const fullLabels = this.commissionMonthlyCommissionData()?.labels ?? [];
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top' as const },
+        tooltip: {
+          callbacks: {
+            title: (items: any[]) => {
+              const idx = items[0]?.dataIndex;
+              return idx !== undefined && fullLabels[idx] ? fullLabels[idx] : '';
+            },
+            label: (ctx: any) => {
+              const val = ctx.parsed?.y ?? ctx.raw;
+              const formatted = typeof val === 'number' ? '$' + val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(val);
+              return 'Commission: ' + formatted;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 35, maxTicksLimit: 12 } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value: number | string): string | number =>
+              typeof value === 'number' ? '$' + value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value
+          }
+        }
+      }
+    };
+  }
+
+  /** Commission Checked Stats: bar chart options (months on X, $ in tooltip). */
+  get commissionBarChartOptions() {
+    const fullLabels = this.commissionMonthlyPnlData()?.labels ?? [];
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top' as const },
+        tooltip: {
+          callbacks: {
+            title: (items: any[]) => {
+              const idx = items[0]?.dataIndex;
+              return idx !== undefined && fullLabels[idx] ? fullLabels[idx] : '';
+            },
+            label: (ctx: any) => {
+              const val = ctx.parsed?.y ?? ctx.raw;
+              const formatted = typeof val === 'number' ? '$' + val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(val);
+              return 'P&L: ' + formatted;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 35, maxTicksLimit: 12 } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value: number | string): string | number =>
+              typeof value === 'number' ? '$' + value.toLocaleString(undefined, { maximumFractionDigits: 0 }) : value
           }
         }
       }

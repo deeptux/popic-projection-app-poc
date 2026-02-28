@@ -105,39 +105,43 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6">Salesforce Client Summary Upload</h2>
 
                         <div class="space-y-4 max-w-xl">
-                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets (.xlsx, .xls, .csv)</label>
+                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets
+                                (.xlsx, .xls, .csv)</label>
 
-                            <input #fileInput type="file" (change)="onFileInputChange($event)" accept=".xlsx,.xls,.csv" multiple
-                                class="hidden" />
+                            <input #fileInput type="file" (change)="onFileInputChange($event)" accept=".xlsx,.xls,.csv"
+                                multiple class="hidden" />
 
-                            <div
-                                (drop)="onDrop($event)"
-                                (dragover)="onDragOver($event)"
-                                (dragleave)="onDragLeave($event)"
-                                (click)="triggerFileInput()"
+                            <div (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+                                (dragleave)="onDragLeave($event)" (click)="triggerFileInput()"
                                 class="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors min-h-[120px] flex flex-col items-center justify-center gap-3"
-                                [class.border-gray-300]="!fileTypeError()"
-                                [class.border-red-400]="fileTypeError()"
-                                [class.bg-red-50]="fileTypeError()"
-                                [class.hover:border-[#FF7E5F]]="!fileTypeError()">
+                                [class.border-gray-300]="!fileTypeError()" [class.border-red-400]="fileTypeError()"
+                                [class.bg-red-50]="fileTypeError()" [class.hover:border-[#FF7E5F]]="!fileTypeError()">
                                 @if (selectedFiles().length === 0) {
-                                    <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to choose (max 3)</p>
-                                    <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError() }}</p>
+                                <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to
+                                    choose (max 3)</p>
+                                <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError()
+                                    }}</p>
                                 } @else {
-                                    <div class="flex flex-wrap gap-3 justify-center items-start w-full" (click)="$event.stopPropagation()">
-                                        @for (f of selectedFiles(); track f.name + $index) {
-                                            <div class="drop-zone-thumbnail">
-                                                <button type="button" class="drop-zone-thumbnail-remove" (click)="removeFile($index)" aria-label="Remove file">×</button>
-                                                <div class="drop-zone-thumbnail-icon">
-                                                    <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                </div>
-                                                <span class="drop-zone-thumbnail-name" [title]="f.name">{{ truncateFilename(f.name, 40) }}</span>
-                                            </div>
-                                        }
+                                <div class="flex flex-wrap gap-3 justify-center items-start w-full"
+                                    (click)="$event.stopPropagation()">
+                                    @for (f of selectedFiles(); track f.name + $index) {
+                                    <div class="drop-zone-thumbnail">
+                                        <button type="button" class="drop-zone-thumbnail-remove"
+                                            (click)="removeFile($index)" aria-label="Remove file">×</button>
+                                        <div class="drop-zone-thumbnail-icon">
+                                            <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <span class="drop-zone-thumbnail-name" [title]="f.name">{{
+                                            truncateFilename(f.name, 40) }}</span>
                                     </div>
-                                    <button type="button" (click)="clearAllFiles(); $event.stopPropagation()" class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
+                                    }
+                                </div>
+                                <button type="button" (click)="clearAllFiles(); $event.stopPropagation()"
+                                    class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
                                 }
                             </div>
 
@@ -172,47 +176,51 @@
                                 <!-- Sub-tabs when 2+ files -->
                                 <div *ngIf="hasRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of rawFileResults(); track slot.filename + $index) {
-                                        <button (click)="setRawSubTab($index)"
-                                            [class]="selectedRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setRawSubTab($index)"
+                                        [class]="selectedRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentRawSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <div class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
-                                                <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{ slot.data.length }} rows)</h2>
-                                            </div>
-                                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
-                                                <table mat-table [dataSource]="slot.data" class="w-full">
-                                                    <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
-                                                        <th mat-header-cell *matHeaderCellDef
-                                                            class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
-                                                            {{ col }}
-                                                        </th>
-                                                        <td mat-cell *matCellDef="let element"
-                                                            class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
-                                                            {{ element[col] }}
-                                                        </td>
-                                                    </ng-container>
-                                                    <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
-                                                    <tr mat-row *matRowDef="let row; columns: slot.columns;" class="hover:bg-gray-50 transition"></tr>
-                                                </table>
-                                            </div>
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <div
+                                        class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
+                                        <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{
+                                            slot.data.length }} rows)</h2>
+                                    </div>
+                                    <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                        <table mat-table [dataSource]="slot.data" class="w-full">
+                                            <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
+                                                <th mat-header-cell *matHeaderCellDef
+                                                    class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
+                                                    {{ col }}
+                                                </th>
+                                                <td mat-cell *matCellDef="let element"
+                                                    class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
+                                                    {{ element[col] }}
+                                                </td>
+                                            </ng-container>
+                                            <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
+                                            <tr mat-row *matRowDef="let row; columns: slot.columns;"
+                                                class="hover:bg-gray-50 transition"></tr>
+                                        </table>
+                                    </div>
+                                    }
                                     }
                                 </div>
                             </div>
@@ -222,31 +230,35 @@
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <div *ngIf="hasCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of cleanedFileResults(); track slot.filename + $index) {
-                                        <button (click)="setCleanedSubTab($index)"
-                                            [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setCleanedSubTab($index)"
+                                        [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentCleanedSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns" title="Cleaned Data Results" [percentageColumns]="salesforcePercentageColumns" />
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns"
+                                        title="Cleaned Data Results"
+                                        [percentageColumns]="salesforcePercentageColumns" />
+                                    }
                                     } @else if (cleanedSlotCount() === 0 && rawSlotCount() > 0) {
-                                        <p class="text-gray-500 text-center py-4">Click the Cleaned Data tab to load cleaned results.</p>
+                                    <p class="text-gray-500 text-center py-4">Click the Cleaned Data tab to load cleaned
+                                        results.</p>
                                     }
                                 </div>
                             </div>
@@ -255,172 +267,195 @@
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <div *ngIf="hasCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of cleanedFileResults(); track slot.filename + $index) {
-                                        <button (click)="setCleanedSubTabForCheckedStats($index)"
-                                            [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setCleanedSubTabForCheckedStats($index)"
+                                        [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (cleanedSlotCount() === 0 && rawSlotCount() > 0) {
-                                        <p class="text-gray-500 text-center py-8">Load Cleaned Data first by clicking the Cleaned Data tab, or wait—it will load automatically.</p>
+                                    <p class="text-gray-500 text-center py-8">Load Cleaned Data first by clicking the
+                                        Cleaned Data tab, or wait—it will load automatically.</p>
                                     } @else if (currentCleanedSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-12">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-12">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text mt-4">Loading cleaned data…</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (!slot.data?.length || !slot.columns?.length) {
+                                    <p class="text-gray-500 text-center py-8">No cleaned data for this file.</p>
+                                    } @else if (checkedStatsLoading()) {
+                                    <div class="flex flex-col items-center py-12">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text mt-4">Loading analytics…</p>
+                                    </div>
+                                    } @else if (checkedStatsError()) {
+                                    <p class="text-red-600 text-center py-4">{{ checkedStatsError() }}</p>
+                                    } @else {
+                                    <div class="checked-stats-charts overflow-auto max-h-[70vh]">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">Top 7 by Additional
+                                                    Rent (line)</h3>
+                                                @if (getLineChartChartData(); as chartData) {
+                                                <div class="chart-container chart-container-lg">
+                                                    <canvas baseChart [type]="'line'" [data]="chartData"
+                                                        [options]="lineChartOptions">
+                                                    </canvas>
                                                 </div>
-                                                <p class="etl-loading-text mt-4">Loading cleaned data…</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (!slot.data?.length || !slot.columns?.length) {
-                                            <p class="text-gray-500 text-center py-8">No cleaned data for this file.</p>
-                                        } @else if (checkedStatsLoading()) {
-                                            <div class="flex flex-col items-center py-12">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">Top 5 by Total
+                                                    Available Units (bar)</h3>
+                                                @if (getBarChartChartData(); as chartData) {
+                                                <div class="chart-container chart-container-lg">
+                                                    <canvas baseChart [type]="'bar'" [data]="chartData"
+                                                        [options]="barChartOptions">
+                                                    </canvas>
                                                 </div>
-                                                <p class="etl-loading-text mt-4">Loading analytics…</p>
-                                            </div>
-                                        } @else if (checkedStatsError()) {
-                                            <p class="text-red-600 text-center py-4">{{ checkedStatsError() }}</p>
-                                        } @else {
-                                            <div class="checked-stats-charts overflow-auto max-h-[70vh]">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                                    <section class="checked-stats-chart-section">
-                                                        <h3 class="text-base font-bold text-gray-700 mb-3">Top 7 by Additional Rent (line)</h3>
-                                                        @if (getLineChartChartData(); as chartData) {
-                                                            <div class="chart-container chart-container-lg">
-                                                                <canvas baseChart
-                                                                    [type]="'line'"
-                                                                    [data]="chartData"
-                                                                    [options]="lineChartOptions">
-                                                                </canvas>
-                                                            </div>
-                                                        } @else {
-                                                            <p class="text-gray-400 text-sm">No data</p>
-                                                        }
-                                                    </section>
-                                                    <section class="checked-stats-chart-section">
-                                                        <h3 class="text-base font-bold text-gray-700 mb-3">Top 5 by Total Available Units (bar)</h3>
-                                                        @if (getBarChartChartData(); as chartData) {
-                                                            <div class="chart-container chart-container-lg">
-                                                                <canvas baseChart
-                                                                    [type]="'bar'"
-                                                                    [data]="chartData"
-                                                                    [options]="barChartOptions">
-                                                                </canvas>
-                                                            </div>
-                                                        } @else {
-                                                            <p class="text-gray-400 text-sm">No data</p>
-                                                        }
-                                                    </section>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RLIP – Top
+                                                    4 + Others (pie)</h3>
+                                                @if (getPieLegendItems(pieRlipData()).length; as len) {
+                                                <div class="mb-2">
+                                                    <span class="font-medium text-gray-700">Legends:</span>
+                                                    <details class="pie-legend-dropdown inline-block ml-2 align-middle">
+                                                        <summary
+                                                            class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">
+                                                            Show ({{ len }} items)</summary>
+                                                        <div
+                                                            class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
+                                                            <ul class="pie-legend-list p-2 space-y-1.5">
+                                                                @for (item of getPieLegendItems(pieRlipData()); track
+                                                                item.label + item.percent) {
+                                                                <li
+                                                                    class="flex items-center gap-2 text-sm pie-legend-item">
+                                                                    <span
+                                                                        class="w-3 h-3 rounded-full shrink-0 flex-shrink-0"
+                                                                        [style.background-color]="item.color"></span>
+                                                                    <span class="pie-legend-item-content">({{
+                                                                        item.percent }}%) {{ formatPieValue(item.value)
+                                                                        }} {{ item.label }}</span>
+                                                                </li>
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    </details>
                                                 </div>
-                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                                    <section class="checked-stats-chart-section">
-                                                        <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RLIP – Top 4 + Others (pie)</h3>
-                                                        @if (getPieLegendItems(pieRlipData()).length; as len) {
-                                                            <div class="mb-2">
-                                                                <span class="font-medium text-gray-700">Legends:</span>
-                                                                <details class="pie-legend-dropdown inline-block ml-2 align-middle">
-                                                                    <summary class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">Show ({{ len }} items)</summary>
-                                                                    <div class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
-                                                                        <ul class="pie-legend-list p-2 space-y-1.5">
-                                                                        @for (item of getPieLegendItems(pieRlipData()); track item.label + item.percent) {
-                                                                            <li class="flex items-center gap-2 text-sm pie-legend-item">
-                                                                                <span class="w-3 h-3 rounded-full shrink-0 flex-shrink-0" [style.background-color]="item.color"></span>
-                                                                                <span class="pie-legend-item-content">({{ item.percent }}%) {{ formatPieValue(item.value) }} {{ item.label }}</span>
-                                                                            </li>
-                                                                        }
-                                                                    </ul>
-                                                                    </div>
-                                                                </details>
-                                                            </div>
-                                                        }
-                                                        @if (getPieChartData(pieRlipData()); as chartData) {
-                                                            <div class="chart-container h-64">
-                                                                <canvas baseChart
-                                                                    [type]="'pie'"
-                                                                    [data]="chartData"
-                                                                    [options]="pieChartOptions">
-                                                                </canvas>
-                                                            </div>
-                                                        } @else {
-                                                            <p class="text-gray-400 text-sm">No data</p>
-                                                        }
-                                                    </section>
-                                                    <section class="checked-stats-chart-section">
-                                                        <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RAP – Top 4 + Others (pie)</h3>
-                                                        @if (getPieLegendItems(pieRapData()).length; as len) {
-                                                            <div class="mb-2">
-                                                                <span class="font-medium text-gray-700">Legends:</span>
-                                                                <details class="pie-legend-dropdown inline-block ml-2 align-middle">
-                                                                    <summary class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">Show ({{ len }} items)</summary>
-                                                                    <div class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
-                                                                        <ul class="pie-legend-list p-2 space-y-1.5">
-                                                                        @for (item of getPieLegendItems(pieRapData()); track item.label + item.percent) {
-                                                                            <li class="flex items-center gap-2 text-sm pie-legend-item">
-                                                                                <span class="w-3 h-3 rounded-full shrink-0 flex-shrink-0" [style.background-color]="item.color"></span>
-                                                                                <span class="pie-legend-item-content">({{ item.percent }}%) {{ formatPieValue(item.value) }} {{ item.label }}</span>
-                                                                            </li>
-                                                                        }
-                                                                    </ul>
-                                                                    </div>
-                                                                </details>
-                                                            </div>
-                                                        }
-                                                        @if (getPieChartData(pieRapData()); as chartData) {
-                                                            <div class="chart-container h-64">
-                                                                <canvas baseChart
-                                                                    [type]="'pie'"
-                                                                    [data]="chartData"
-                                                                    [options]="pieChartOptions">
-                                                                </canvas>
-                                                            </div>
-                                                        } @else {
-                                                            <p class="text-gray-400 text-sm">No data</p>
-                                                        }
-                                                    </section>
-                                                    <section class="checked-stats-chart-section">
-                                                        <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RLIP vs RAP (pie)</h3>
-                                                        @if (getPieLegendItems(pieCompareData()).length; as len) {
-                                                            <div class="mb-2">
-                                                                <span class="font-medium text-gray-700">Legends:</span>
-                                                                <details class="pie-legend-dropdown inline-block ml-2 align-middle">
-                                                                    <summary class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">Show ({{ len }} items)</summary>
-                                                                    <div class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
-                                                                        <ul class="pie-legend-list p-2 space-y-1.5">
-                                                                        @for (item of getPieLegendItems(pieCompareData()); track item.label + item.percent) {
-                                                                            <li class="flex items-center gap-2 text-sm pie-legend-item">
-                                                                                <span class="w-3 h-3 rounded-full shrink-0 flex-shrink-0" [style.background-color]="item.color"></span>
-                                                                                <span class="pie-legend-item-content">({{ item.percent }}%) {{ formatPieValue(item.value) }} {{ item.label }}</span>
-                                                                            </li>
-                                                                        }
-                                                                    </ul>
-                                                                    </div>
-                                                                </details>
-                                                            </div>
-                                                        }
-                                                        @if (getPieChartData(pieCompareData()); as chartData) {
-                                                            <div class="chart-container h-64">
-                                                                <canvas baseChart
-                                                                    [type]="'pie'"
-                                                                    [data]="chartData"
-                                                                    [options]="pieChartOptions">
-                                                                </canvas>
-                                                            </div>
-                                                        } @else {
-                                                            <p class="text-gray-400 text-sm">No data</p>
-                                                        }
-                                                    </section>
+                                                }
+                                                @if (getPieChartData(pieRlipData()); as chartData) {
+                                                <div class="chart-container h-64">
+                                                    <canvas baseChart [type]="'pie'" [data]="chartData"
+                                                        [options]="pieChartOptions">
+                                                    </canvas>
                                                 </div>
-                                            </div>
-                                        }
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RAP – Top 4
+                                                    + Others (pie)</h3>
+                                                @if (getPieLegendItems(pieRapData()).length; as len) {
+                                                <div class="mb-2">
+                                                    <span class="font-medium text-gray-700">Legends:</span>
+                                                    <details class="pie-legend-dropdown inline-block ml-2 align-middle">
+                                                        <summary
+                                                            class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">
+                                                            Show ({{ len }} items)</summary>
+                                                        <div
+                                                            class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
+                                                            <ul class="pie-legend-list p-2 space-y-1.5">
+                                                                @for (item of getPieLegendItems(pieRapData()); track
+                                                                item.label + item.percent) {
+                                                                <li
+                                                                    class="flex items-center gap-2 text-sm pie-legend-item">
+                                                                    <span
+                                                                        class="w-3 h-3 rounded-full shrink-0 flex-shrink-0"
+                                                                        [style.background-color]="item.color"></span>
+                                                                    <span class="pie-legend-item-content">({{
+                                                                        item.percent }}%) {{ formatPieValue(item.value)
+                                                                        }} {{ item.label }}</span>
+                                                                </li>
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    </details>
+                                                </div>
+                                                }
+                                                @if (getPieChartData(pieRapData()); as chartData) {
+                                                <div class="chart-container h-64">
+                                                    <canvas baseChart [type]="'pie'" [data]="chartData"
+                                                        [options]="pieChartOptions">
+                                                    </canvas>
+                                                </div>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">POPIC Fee RLIP vs RAP
+                                                    (pie)</h3>
+                                                @if (getPieLegendItems(pieCompareData()).length; as len) {
+                                                <div class="mb-2">
+                                                    <span class="font-medium text-gray-700">Legends:</span>
+                                                    <details class="pie-legend-dropdown inline-block ml-2 align-middle">
+                                                        <summary
+                                                            class="cursor-pointer text-sm text-[#FD3A69] hover:underline select-none">
+                                                            Show ({{ len }} items)</summary>
+                                                        <div
+                                                            class="pie-legend-list-wrap mt-2 border border-gray-200 rounded-lg bg-gray-50">
+                                                            <ul class="pie-legend-list p-2 space-y-1.5">
+                                                                @for (item of getPieLegendItems(pieCompareData()); track
+                                                                item.label + item.percent) {
+                                                                <li
+                                                                    class="flex items-center gap-2 text-sm pie-legend-item">
+                                                                    <span
+                                                                        class="w-3 h-3 rounded-full shrink-0 flex-shrink-0"
+                                                                        [style.background-color]="item.color"></span>
+                                                                    <span class="pie-legend-item-content">({{
+                                                                        item.percent }}%) {{ formatPieValue(item.value)
+                                                                        }} {{ item.label }}</span>
+                                                                </li>
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    </details>
+                                                </div>
+                                                }
+                                                @if (getPieChartData(pieCompareData()); as chartData) {
+                                                <div class="chart-container h-64">
+                                                    <canvas baseChart [type]="'pie'" [data]="chartData"
+                                                        [options]="pieChartOptions">
+                                                    </canvas>
+                                                </div>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                        </div>
+                                    </div>
+                                    }
                                     }
                                 </div>
                             </div>
@@ -433,37 +468,41 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6">Commissions Report Upload</h2>
 
                         <div class="space-y-4 max-w-xl">
-                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets (.xlsx, .xls, .csv)</label>
-                            <input #commissionFileInput type="file" (change)="onFileInputChange($event)" accept=".xlsx,.xls,.csv" multiple
-                                class="hidden" />
-                            <div
-                                (drop)="onDrop($event)"
-                                (dragover)="onDragOver($event)"
-                                (dragleave)="onDragLeave($event)"
-                                (click)="triggerCommissionFileInput()"
+                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets
+                                (.xlsx, .xls, .csv)</label>
+                            <input #commissionFileInput type="file" (change)="onFileInputChange($event)"
+                                accept=".xlsx,.xls,.csv" multiple class="hidden" />
+                            <div (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+                                (dragleave)="onDragLeave($event)" (click)="triggerCommissionFileInput()"
                                 class="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors min-h-[120px] flex flex-col items-center justify-center gap-3"
-                                [class.border-gray-300]="!fileTypeError()"
-                                [class.border-red-400]="fileTypeError()"
-                                [class.bg-red-50]="fileTypeError()"
-                                [class.hover:border-[#FF7E5F]]="!fileTypeError()">
+                                [class.border-gray-300]="!fileTypeError()" [class.border-red-400]="fileTypeError()"
+                                [class.bg-red-50]="fileTypeError()" [class.hover:border-[#FF7E5F]]="!fileTypeError()">
                                 @if (selectedFiles().length === 0) {
-                                    <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to choose (max 3)</p>
-                                    <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError() }}</p>
+                                <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to
+                                    choose (max 3)</p>
+                                <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError()
+                                    }}</p>
                                 } @else {
-                                    <div class="flex flex-wrap gap-3 justify-center items-start w-full" (click)="$event.stopPropagation()">
-                                        @for (f of selectedFiles(); track f.name + $index) {
-                                            <div class="drop-zone-thumbnail">
-                                                <button type="button" class="drop-zone-thumbnail-remove" (click)="removeFile($index)" aria-label="Remove file">×</button>
-                                                <div class="drop-zone-thumbnail-icon">
-                                                    <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                </div>
-                                                <span class="drop-zone-thumbnail-name" [title]="f.name">{{ truncateFilename(f.name, 40) }}</span>
-                                            </div>
-                                        }
+                                <div class="flex flex-wrap gap-3 justify-center items-start w-full"
+                                    (click)="$event.stopPropagation()">
+                                    @for (f of selectedFiles(); track f.name + $index) {
+                                    <div class="drop-zone-thumbnail">
+                                        <button type="button" class="drop-zone-thumbnail-remove"
+                                            (click)="removeFile($index)" aria-label="Remove file">×</button>
+                                        <div class="drop-zone-thumbnail-icon">
+                                            <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <span class="drop-zone-thumbnail-name" [title]="f.name">{{
+                                            truncateFilename(f.name, 40) }}</span>
                                     </div>
-                                    <button type="button" (click)="clearAllFiles(); $event.stopPropagation()" class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
+                                    }
+                                </div>
+                                <button type="button" (click)="clearAllFiles(); $event.stopPropagation()"
+                                    class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
                                 }
                             </div>
                             <button (click)="uploadFile()" [disabled]="!canUpload()"
@@ -495,89 +534,167 @@
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <div *ngIf="hasCommissionRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of commissionRawFileResults(); track slot.filename + $index) {
-                                        <button (click)="setCommissionRawSubTab($index)"
-                                            [class]="selectedCommissionRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setCommissionRawSubTab($index)"
+                                        [class]="selectedCommissionRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentCommissionRawSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <div class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
-                                                <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{ slot.data.length }} rows)</h2>
-                                            </div>
-                                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
-                                                <table mat-table [dataSource]="slot.data" class="w-full">
-                                                    <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
-                                                        <th mat-header-cell *matHeaderCellDef
-                                                            class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
-                                                            {{ col }}
-                                                        </th>
-                                                        <td mat-cell *matCellDef="let element"
-                                                            class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
-                                                            {{ element[col] }}
-                                                        </td>
-                                                    </ng-container>
-                                                    <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
-                                                    <tr mat-row *matRowDef="let row; columns: slot.columns;" class="hover:bg-gray-50 transition"></tr>
-                                                </table>
-                                            </div>
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <div
+                                        class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
+                                        <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{
+                                            slot.data.length }} rows)</h2>
+                                    </div>
+                                    <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                        <table mat-table [dataSource]="slot.data" class="w-full">
+                                            <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
+                                                <th mat-header-cell *matHeaderCellDef
+                                                    class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
+                                                    {{ col }}
+                                                </th>
+                                                <td mat-cell *matCellDef="let element"
+                                                    class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
+                                                    {{ element[col] }}
+                                                </td>
+                                            </ng-container>
+                                            <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
+                                            <tr mat-row *matRowDef="let row; columns: slot.columns;"
+                                                class="hover:bg-gray-50 transition"></tr>
+                                        </table>
+                                    </div>
+                                    }
                                     }
                                 </div>
                             </div>
 
                             <div *ngIf="commissionSubTab === 'cleanedData'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCommissionCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCommissionCleanedSubTabs()"
+                                    class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of commissionCleanedFileResults(); track slot.filename + $index) {
-                                        <button (click)="setCommissionCleanedSubTab($index)"
-                                            [class]="selectedCommissionCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setCommissionCleanedSubTab($index)"
+                                        [class]="selectedCommissionCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentCommissionCleanedSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns" title="Cleaned Data Results" [filterableColumns]="commissionFilterableColumns" [excludeFormatColumns]="commissionExcludeFormatColumns" />
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns"
+                                        title="Cleaned Data Results" [filterableColumns]="commissionFilterableColumns"
+                                        [excludeFormatColumns]="commissionExcludeFormatColumns" />
+                                    }
                                     }
                                 </div>
                             </div>
 
                             <div *ngIf="commissionSubTab === 'checkedStats'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+                                <div *ngIf="hasCommissionCleanedSubTabs()"
+                                    class="flex border-b border-gray-100 p-2 gap-1">
+                                    @for (slot of commissionCleanedFileResults(); track slot.filename + $index) {
+                                    <button (click)="setCommissionCleanedSubTab($index)"
+                                        [class]="selectedCommissionCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
+                                    }
+                                </div>
                                 <div class="p-6">
-                                    <p class="text-gray-600">Analytics for commission data (e.g. by Salesperson, Total commission) can be added here. For now, use Cleaned Data to view merged results by Salesperson, Captive Name, and Client.</p>
+                                    @if (commissionCleanedSlotCount() === 0 && commissionRawSlotCount() > 0) {
+                                    <p class="text-gray-500 text-center py-8">Load Cleaned Data first by clicking the
+                                        Cleaned Data tab, or wait—it will load automatically.</p>
+                                    } @else if (currentCommissionCleanedSlot(); as slot) {
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-12">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text mt-4">Loading cleaned data…</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (!slot.data?.length || !slot.columns?.length) {
+                                    <p class="text-gray-500 text-center py-8">No cleaned data for this file.</p>
+                                    } @else if (commissionCheckedStatsLoading()) {
+                                    <div class="flex flex-col items-center py-12">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text mt-4">Loading analytics…</p>
+                                    </div>
+                                    } @else if (commissionCheckedStatsError()) {
+                                    <p class="text-red-600 text-center py-4">{{ commissionCheckedStatsError() }}</p>
+                                    } @else {
+                                    <div class="checked-stats-charts overflow-auto max-h-[70vh]">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">January–December
+                                                    Commission (line)</h3>
+                                                @if (getCommissionLineChartChartData(); as chartData) {
+                                                <div class="chart-container chart-container-lg">
+                                                    <canvas baseChart [type]="'line'" [data]="chartData"
+                                                        [options]="commissionLineChartOptions">
+                                                    </canvas>
+                                                </div>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                            <section class="checked-stats-chart-section">
+                                                <h3 class="text-base font-bold text-gray-700 mb-3">January–December P&L
+                                                    (bar)</h3>
+                                                @if (getCommissionBarChartChartData(); as chartData) {
+                                                <div class="chart-container chart-container-lg">
+                                                    <canvas baseChart [type]="'bar'" [data]="chartData"
+                                                        [options]="commissionBarChartOptions">
+                                                    </canvas>
+                                                </div>
+                                                } @else {
+                                                <p class="text-gray-400 text-sm">No data</p>
+                                                }
+                                            </section>
+                                        </div>
+                                    </div>
+                                    }
+                                    }
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -587,37 +704,41 @@
                         <h2 class="text-xl font-bold text-gray-800 mb-6">Referral Report Upload</h2>
 
                         <div class="space-y-4 max-w-xl">
-                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets (.xlsx, .xls, .csv)</label>
-                            <input #referralFileInput type="file" (change)="onFileInputChange($event)" accept=".xlsx,.xls,.csv" multiple
-                                class="hidden" />
-                            <div
-                                (drop)="onDrop($event)"
-                                (dragover)="onDragOver($event)"
-                                (dragleave)="onDragLeave($event)"
-                                (click)="triggerReferralFileInput()"
+                            <label class="block text-sm font-medium text-[#FD3A69]">Select or drop up to 3 spreadsheets
+                                (.xlsx, .xls, .csv)</label>
+                            <input #referralFileInput type="file" (change)="onFileInputChange($event)"
+                                accept=".xlsx,.xls,.csv" multiple class="hidden" />
+                            <div (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+                                (dragleave)="onDragLeave($event)" (click)="triggerReferralFileInput()"
                                 class="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors min-h-[120px] flex flex-col items-center justify-center gap-3"
-                                [class.border-gray-300]="!fileTypeError()"
-                                [class.border-red-400]="fileTypeError()"
-                                [class.bg-red-50]="fileTypeError()"
-                                [class.hover:border-[#FF7E5F]]="!fileTypeError()">
+                                [class.border-gray-300]="!fileTypeError()" [class.border-red-400]="fileTypeError()"
+                                [class.bg-red-50]="fileTypeError()" [class.hover:border-[#FF7E5F]]="!fileTypeError()">
                                 @if (selectedFiles().length === 0) {
-                                    <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to choose (max 3)</p>
-                                    <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError() }}</p>
+                                <p *ngIf="!fileTypeError()" class="text-gray-600 text-sm">Drop files here or click to
+                                    choose (max 3)</p>
+                                <p *ngIf="fileTypeError()" class="text-red-600 text-sm font-medium">{{ fileTypeError()
+                                    }}</p>
                                 } @else {
-                                    <div class="flex flex-wrap gap-3 justify-center items-start w-full" (click)="$event.stopPropagation()">
-                                        @for (f of selectedFiles(); track f.name + $index) {
-                                            <div class="drop-zone-thumbnail">
-                                                <button type="button" class="drop-zone-thumbnail-remove" (click)="removeFile($index)" aria-label="Remove file">×</button>
-                                                <div class="drop-zone-thumbnail-icon">
-                                                    <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                </div>
-                                                <span class="drop-zone-thumbnail-name" [title]="f.name">{{ truncateFilename(f.name, 40) }}</span>
-                                            </div>
-                                        }
+                                <div class="flex flex-wrap gap-3 justify-center items-start w-full"
+                                    (click)="$event.stopPropagation()">
+                                    @for (f of selectedFiles(); track f.name + $index) {
+                                    <div class="drop-zone-thumbnail">
+                                        <button type="button" class="drop-zone-thumbnail-remove"
+                                            (click)="removeFile($index)" aria-label="Remove file">×</button>
+                                        <div class="drop-zone-thumbnail-icon">
+                                            <svg class="w-8 h-8 text-[#FF7E5F]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <span class="drop-zone-thumbnail-name" [title]="f.name">{{
+                                            truncateFilename(f.name, 40) }}</span>
                                     </div>
-                                    <button type="button" (click)="clearAllFiles(); $event.stopPropagation()" class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
+                                    }
+                                </div>
+                                <button type="button" (click)="clearAllFiles(); $event.stopPropagation()"
+                                    class="text-sm text-gray-500 hover:text-[#FD3A69] underline">Clear all</button>
                                 }
                             </div>
                             <button (click)="uploadFile()" [disabled]="!canUpload()"
@@ -649,80 +770,90 @@
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <div *ngIf="hasReferralRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of referralRawFileResults(); track slot.filename + $index) {
-                                        <button (click)="setReferralRawSubTab($index)"
-                                            [class]="selectedReferralRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setReferralRawSubTab($index)"
+                                        [class]="selectedReferralRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentReferralRawSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <div class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
-                                                <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{ slot.data.length }} rows)</h2>
-                                            </div>
-                                            <div class="overflow-auto max-h-[70vh] data-table-scroll">
-                                                <table mat-table [dataSource]="slot.data" class="w-full">
-                                                    <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
-                                                        <th mat-header-cell *matHeaderCellDef
-                                                            class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
-                                                            {{ col }}
-                                                        </th>
-                                                        <td mat-cell *matCellDef="let element"
-                                                            class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
-                                                            {{ element[col] }}
-                                                        </td>
-                                                    </ng-container>
-                                                    <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
-                                                    <tr mat-row *matRowDef="let row; columns: slot.columns;" class="hover:bg-gray-50 transition"></tr>
-                                                </table>
-                                            </div>
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <div
+                                        class="border-b border-gray-50 flex justify-between items-center bg-gray-50/50 -m-6 mb-4 p-4">
+                                        <h2 class="font-bold text-lg text-gray-700">Raw Data Results ({{
+                                            slot.data.length }} rows)</h2>
+                                    </div>
+                                    <div class="overflow-auto max-h-[70vh] data-table-scroll">
+                                        <table mat-table [dataSource]="slot.data" class="w-full">
+                                            <ng-container *ngFor="let col of slot.columns" [matColumnDef]="col">
+                                                <th mat-header-cell *matHeaderCellDef
+                                                    class="bg-gray-50 text-gray-600 font-bold p-4 text-xs uppercase tracking-wider whitespace-nowrap">
+                                                    {{ col }}
+                                                </th>
+                                                <td mat-cell *matCellDef="let element"
+                                                    class="p-4 border-t border-gray-50 text-sm text-gray-600 whitespace-nowrap">
+                                                    {{ element[col] }}
+                                                </td>
+                                            </ng-container>
+                                            <tr mat-header-row *matHeaderRowDef="slot.columns; sticky: true"></tr>
+                                            <tr mat-row *matRowDef="let row; columns: slot.columns;"
+                                                class="hover:bg-gray-50 transition"></tr>
+                                        </table>
+                                    </div>
+                                    }
                                     }
                                 </div>
                             </div>
 
                             <div *ngIf="referralSubTab === 'cleanedData'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasReferralCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasReferralCleanedSubTabs()"
+                                    class="flex border-b border-gray-100 p-2 gap-1">
                                     @for (slot of referralCleanedFileResults(); track slot.filename + $index) {
-                                        <button (click)="setReferralCleanedSubTab($index)"
-                                            [class]="selectedReferralCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                                            [title]="slot.filename">
-                                            File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
-                                        </button>
+                                    <button (click)="setReferralCleanedSubTab($index)"
+                                        [class]="selectedReferralCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                        [title]="slot.filename">
+                                        File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
+                                    </button>
                                     }
                                 </div>
                                 <div class="p-6">
                                     @if (currentReferralCleanedSlot(); as slot) {
-                                        @if (slot.loading) {
-                                            <div class="flex flex-col items-center py-8">
-                                                <div class="etl-loader-wrap">
-                                                    <div class="etl-loader"></div>
-                                                    <div class="etl-loader-inner"></div>
-                                                </div>
-                                                <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and Loading</p>
-                                            </div>
-                                        } @else if (slot.error) {
-                                            <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
-                                        } @else if (slot.data && slot.columns) {
-                                            <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns" title="Cleaned Data Results" [filterableColumns]="referralFilterableColumns" [percentageColumns]="referralPercentageColumns" [excludeFormatColumns]="referralExcludeFormatColumns" />
-                                        }
+                                    @if (slot.loading) {
+                                    <div class="flex flex-col items-center py-8">
+                                        <div class="etl-loader-wrap">
+                                            <div class="etl-loader"></div>
+                                            <div class="etl-loader-inner"></div>
+                                        </div>
+                                        <p class="etl-loading-text">Uploading Spreadsheet, Extracting, Transforming and
+                                            Loading</p>
+                                    </div>
+                                    } @else if (slot.error) {
+                                    <p class="text-red-600 text-center py-4">{{ slot.error }}</p>
+                                    } @else if (slot.data && slot.columns) {
+                                    <app-spreadsheet-data-table [data]="slot.data" [columns]="slot.columns"
+                                        title="Cleaned Data Results" [filterableColumns]="referralFilterableColumns"
+                                        [percentageColumns]="referralPercentageColumns"
+                                        [excludeFormatColumns]="referralExcludeFormatColumns" />
+                                    }
                                     } @else if (referralCleanedSlotCount() === 0 && referralRawSlotCount() > 0) {
-                                        <p class="text-gray-500 text-center py-4">Click the Cleaned Data tab to load cleaned results.</p>
+                                    <p class="text-gray-500 text-center py-4">Click the Cleaned Data tab to load cleaned
+                                        results.</p>
                                     }
                                 </div>
                             </div>
@@ -731,9 +862,11 @@
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <div class="p-6">
                                     @if (referralCleanedSlotCount() === 0 && referralRawSlotCount() > 0) {
-                                        <p class="text-gray-500 text-center py-8">Load Cleaned Data first by clicking the Cleaned Data tab.</p>
+                                    <p class="text-gray-500 text-center py-8">Load Cleaned Data first by clicking the
+                                        Cleaned Data tab.</p>
                                     } @else {
-                                        <p class="text-gray-600">Analytics for referral data can be added here. For now, use Cleaned Data to view merged results by Vendor, Captive Name, and Client.</p>
+                                    <p class="text-gray-600">Analytics for referral data can be added here. For now, use
+                                        Cleaned Data to view merged results by Vendor, Captive Name, and Client.</p>
                                     }
                                 </div>
                             </div>
