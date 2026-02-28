@@ -3,7 +3,8 @@
     <div class="flex items-center gap-2 ml-auto">
         <span class="table-search-wrap">
             <svg class="table-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input type="text" [value]="searchTerm()" (input)="setSearch($any($event.target).value)"
                 placeholder="Search table…" class="table-search-input" />
@@ -18,31 +19,34 @@
                 <span class="flex items-center gap-1">
                     {{ col }}
                     @if (isFilterable(col)) {
-                        <span class="relative">
-                            <button type="button" (click)="openFilterDropdown(col, $event)" class="sort-btn" title="Filter"
-                                [class.filter-active]="(columnFilters()[col]?.size ?? 0) > 0">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                            </button>
-                        </span>
-                    } @else {
-                        <button type="button" (click)="toggleSort(col)" class="sort-btn"
-                            [title]="getSortDirection(col) === null ? (isColumnNumeric(col) ? 'Click to sort' : 'Click to sort A-Z') : (getSortDirection(col) === 'desc' ? 'Click to clear sort' : (isColumnNumeric(col) ? 'Click for High to Low' : 'Click for Z-A'))">
-                            @if (getSortDirection(col) === 'asc') {
-                                @if (isColumnNumeric(col)) {
-                                    <span title="Low to High">↑</span>
-                                } @else {
-                                    <span title="A-Z">A-Z</span>
-                                }
-                            } @else if (getSortDirection(col) === 'desc') {
-                                @if (isColumnNumeric(col)) {
-                                    <span title="High to Low">↓</span>
-                                } @else {
-                                    <span title="Z-A">Z-A</span>
-                                }
-                            } @else {
-                                <span class="sort-placeholder" title="Click to sort">⇅</span>
-                            }
+                    <span class="relative">
+                        <button type="button" (click)="openFilterDropdown(col, $event)" class="sort-btn" title="Filter"
+                            [class.filter-active]="(columnFilters()[col]?.size ?? 0) > 0">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
                         </button>
+                    </span>
+                    } @else {
+                    <button type="button" (click)="toggleSort(col)" class="sort-btn"
+                        [title]="getSortDirection(col) === null ? (isColumnNumeric(col) ? 'Click to sort' : 'Click to sort A-Z') : (getSortDirection(col) === 'desc' ? 'Click to clear sort' : (isColumnNumeric(col) ? 'Click for High to Low' : 'Click for Z-A'))">
+                        @if (getSortDirection(col) === 'asc') {
+                        @if (isColumnNumeric(col)) {
+                        <span title="Low to High">↑</span>
+                        } @else {
+                        <span title="A-Z">A-Z</span>
+                        }
+                        } @else if (getSortDirection(col) === 'desc') {
+                        @if (isColumnNumeric(col)) {
+                        <span title="High to Low">↓</span>
+                        } @else {
+                        <span title="Z-A">Z-A</span>
+                        }
+                        } @else {
+                        <span class="sort-placeholder" title="Click to sort">⇅</span>
+                        }
+                    </button>
                     }
                 </span>
             </th>
@@ -58,60 +62,57 @@
 <div class="flex flex-wrap items-center justify-center gap-4 pt-4 pb-2">
     <div class="flex items-center gap-2">
         <label for="page-size" class="text-sm text-gray-600">Rows per page</label>
-        <select id="page-size" [value]="pageSize()" (change)="setPageSize(+$any($event.target).value)"
+        <select id="page-size" [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)"
             class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm bg-white">
             @for (opt of pageSizeOptions; track opt) {
-                <option [value]="opt">{{ opt }}</option>
+            <option [ngValue]="opt">{{ opt }}</option>
             }
         </select>
     </div>
     <div class="flex items-center gap-1">
-        <button type="button" (click)="setPageIndex(pageIndex() - 1)"
-            [disabled]="pageIndex() <= 0"
+        <button type="button" (click)="setPageIndex(pageIndex() - 1)" [disabled]="pageIndex() <= 0"
             class="pagination-btn" aria-label="Previous page">‹</button>
         @if (totalPages() > 0) {
-            @for (p of pageNumbers(); track p) {
-                @if (p === -1) {
-                    <span class="px-1 text-gray-400">…</span>
-                } @else {
-                    <button type="button" (click)="setPageIndex(p)"
-                        [class]="p === clampedPageIndex() ? 'pagination-btn pagination-btn-active' : 'pagination-btn'">{{ p + 1 }}</button>
-                }
-            }
+        @for (p of pageNumbers(); track p) {
+        @if (p === -1) {
+        <span class="px-1 text-gray-400">…</span>
+        } @else {
+        <button type="button" (click)="setPageIndex(p)"
+            [class]="p === clampedPageIndex() ? 'pagination-btn pagination-btn-active' : 'pagination-btn'">{{ p + 1
+            }}</button>
+        }
+        }
         }
         <button type="button" (click)="setPageIndex(pageIndex() + 1)"
-            [disabled]="clampedPageIndex() >= totalPages() - 1"
-            class="pagination-btn" aria-label="Next page">›</button>
+            [disabled]="clampedPageIndex() >= totalPages() - 1" class="pagination-btn" aria-label="Next page">›</button>
     </div>
     <span class="text-sm text-gray-600">
         {{ totalRows() === 0 ? '0' : rangeStart() }}-{{ min(rangeEnd(), totalRows()) }} of {{ totalRows() }}
     </span>
 </div>
 @if (filterDropdownOpen(); as col) {
-    @if (filterDropdownPosition(); as pos) {
-        <div class="filter-dropdown filter-dropdown-fixed"
-            [style.top.px]="pos.top"
-            [style.left.px]="pos.left">
-            <div class="filter-dropdown-header">
-                <span class="text-xs font-medium text-gray-600">Filter by {{ col }}</span>
-                <button type="button" (click)="clearFilter(col)" class="text-xs text-[#FD3A69] hover:underline">Clear</button>
-            </div>
-            <div class="filter-dropdown-search">
-                <input type="text" [value]="filterDropdownSearchTerm()" (input)="setFilterDropdownSearch($any($event.target).value)"
-                    placeholder="Search in list…" class="filter-dropdown-search-input" />
-            </div>
-            <div class="filter-dropdown-list">
-                @for (val of getFilteredUniqueValues(col); track val) {
-                    <label class="filter-dropdown-item">
-                        <input type="checkbox" [checked]="isFilterValueSelected(col, val)"
-                            (change)="toggleFilterValue(col, val)" />
-                        <span>{{ val }}</span>
-                    </label>
-                }
-                @if (getFilteredUniqueValues(col).length === 0) {
-                    <div class="filter-dropdown-empty">No matches</div>
-                }
-            </div>
-        </div>
-    }
+@if (filterDropdownPosition(); as pos) {
+<div class="filter-dropdown filter-dropdown-fixed" [style.top.px]="pos.top" [style.left.px]="pos.left">
+    <div class="filter-dropdown-header">
+        <span class="text-xs font-medium text-gray-600">Filter by {{ col }}</span>
+        <button type="button" (click)="clearFilter(col)" class="text-xs text-[#FD3A69] hover:underline">Clear</button>
+    </div>
+    <div class="filter-dropdown-search">
+        <input type="text" [value]="filterDropdownSearchTerm()"
+            (input)="setFilterDropdownSearch($any($event.target).value)" placeholder="Search in list…"
+            class="filter-dropdown-search-input" />
+    </div>
+    <div class="filter-dropdown-list">
+        @for (val of getFilteredUniqueValues(col); track val) {
+        <label class="filter-dropdown-item">
+            <input type="checkbox" [checked]="isFilterValueSelected(col, val)" (change)="toggleFilterValue(col, val)" />
+            <span>{{ val }}</span>
+        </label>
+        }
+        @if (getFilteredUniqueValues(col).length === 0) {
+        <div class="filter-dropdown-empty">No matches</div>
+        }
+    </div>
+</div>
+}
 }
