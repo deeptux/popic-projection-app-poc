@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ingestion.engine import consolidate_excel_data, ingest_salesforce, merge_rlip_rap
 from ingestion.commission import ingest_commission
+from ingestion.referral import ingest_referral
 from analytics.charts import (
     top_additional_rent_line,
     top_total_available_units_bar,
@@ -105,6 +106,39 @@ async def Upload_CommissionReport(file: UploadFile = File(...)):
     contents = await file.read()
     try:
         result = ingest_commission(contents, filename=file.filename or None)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    data = result["data"]
+    columns = result.get("columns", list(data[0].keys()) if data else [])
+    return {
+        "filename": file.filename,
+        "total_rows": len(data),
+        "columns": columns,
+        "data": data,
+        "ingestion_metadata": result.get("ingestion_metadata", {}),
+    }
+
+
+@app.post("/upload/referral-report/basic")
+async def Upload_ReferralReportBasic(file: UploadFile = File(...)):
+    """Raw referral report: read Excel and return data/columns without ETL."""
+    contents = await file.read()
+    df = pl.read_excel(io.BytesIO(contents))
+    df = df.fill_nan(None)
+    return {
+        "filename": file.filename,
+        "total_rows": len(df),
+        "columns": df.columns,
+        "data": df.to_dicts(),
+    }
+
+
+@app.post("/upload/referral-report")
+async def Upload_ReferralReport(file: UploadFile = File(...)):
+    """Cleaned referral report: run ETL (group by Vendor, Captive, Client; filter subtotals)."""
+    contents = await file.read()
+    try:
+        result = ingest_referral(contents, filename=file.filename or None)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     data = result["data"]

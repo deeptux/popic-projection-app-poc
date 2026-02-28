@@ -26,6 +26,7 @@ _CAPTIVE_KEY_ANY = ("captive", "captiev", "captve", "captiv")
 _CAPTIVE_KEY_ALL = ("name",)
 _CLIENT_KEY_ANY = ("client", "cliant", "clent")
 _SALESPERSON_KEY_ANY = ("salesperson", "sales person", "salesperson")
+_VENDOR_KEY_ANY = ("vendor", "referrer", "referral")
 
 
 def _key_tokens_match(canonical: str, n_act: str) -> bool:
@@ -46,6 +47,8 @@ def _key_tokens_match(canonical: str, n_act: str) -> bool:
         return any(t in n_act for t in _CLIENT_KEY_ANY) and "name" in n_act
     if canonical == "Salesperson":
         return any(t in n_act for t in _SALESPERSON_KEY_ANY)
+    if canonical == "Vendor":
+        return any(t in n_act for t in _VENDOR_KEY_ANY)
     return False
 
 

@@ -53,6 +53,22 @@ def _normalize_column_name(col: str) -> str:
     return col.replace(" ↑", "").strip() if isinstance(col, str) else str(col)
 
 
+def _is_nuisance_header(name: str) -> bool:
+    """True if this header is a placeholder/nuisance we should omit (e.g. empty, single letter 'x')."""
+    if not name:
+        return True
+    s = name.strip()
+    if not s:
+        return True
+    # Single-letter or common placeholders Polars/Excel use for unnamed columns
+    if len(s) == 1 and s.isalpha():
+        return True
+    low = s.lower()
+    if low in ("unnamed", "column", "null", "none"):
+        return True
+    return False
+
+
 def _find_table_start_row(df_raw: pl.DataFrame) -> int:
     """
     Find 0-based row index where the table starts (row containing CAPTIVE_COL).
@@ -80,11 +96,15 @@ def _raw_header_cells(df_raw: pl.DataFrame, header_row: int) -> list[tuple[int, 
     return cells
 
 
-def _load_excel_table(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int, int, str]]]:
+def _load_excel_table(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int, int, str]], dict]:
     """
     Load the data table from Excel, supporting optional header block above the table.
-    Returns (dataframe with table data, header region cells for period parsing).
+    Omits nuisance columns (empty, single-letter placeholders like 'x') and duplicate
+    header names to avoid DuplicateError; records them in returned metadata.
+    Returns (dataframe with table data, header region cells, load_metadata with header_issues).
     """
+    header_issues: list[str] = []
+
     # Read without header to find table start
     df_raw = pl.read_excel(
         source=io.BytesIO(contents),
@@ -97,23 +117,60 @@ def _load_excel_table(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int, in
     if header_row == 0:
         # Table at top: read again with default header
         df = pl.read_excel(source=io.BytesIO(contents), infer_schema_length=10000)
+        # Still detect and drop nuisance/duplicate columns
+        col_names = list(df.columns)
+        kept_indices: list[int] = []
+        kept_names: list[str] = []
+        seen: set[str] = set()
+        for i, name in enumerate(col_names):
+            n = _normalize_column_name(str(name))
+            if _is_nuisance_header(n):
+                header_issues.append(f"Omitted nuisance column at index {i}: {repr(name)}")
+                continue
+            if n in seen:
+                header_issues.append(f"Omitted duplicate column at index {i}: {repr(n)}")
+                continue
+            seen.add(n)
+            kept_indices.append(i)
+            kept_names.append(n)
+        if kept_indices != list(range(len(col_names))):
+            df = df.select([df.columns[i] for i in kept_indices])
+            df = df.rename({df.columns[j]: kept_names[j] for j in range(len(kept_indices))})
     else:
         # Use header row as column names, rest as data
         names_row = df_raw.row(header_row, named=False)
         col_names = [_normalize_column_name(str(c)) for c in names_row]
-        # Slice data rows
+        # Decide which columns to keep: skip nuisance and duplicate names
+        kept_indices = []
+        kept_names = []
+        seen = set()
+        for i, n in enumerate(col_names):
+            if _is_nuisance_header(n):
+                header_issues.append(f"Omitted nuisance column at index {i}: {repr(n) or '(empty)'}")
+                continue
+            if n in seen:
+                header_issues.append(f"Omitted duplicate column at index {i}: {repr(n)}")
+                continue
+            seen.add(n)
+            kept_indices.append(i)
+            kept_names.append(n)
+
         df_data = df_raw.slice(header_row + 1)
         if df_data.height == 0:
-            df = pl.DataFrame(schema={c: pl.Utf8 for c in col_names})
+            df = pl.DataFrame(schema={c: pl.Utf8 for c in kept_names})
         else:
             df = pl.DataFrame(
                 [df_data.row(i, named=False) for i in range(df_data.height)],
                 orient="row",
             )
-            n = min(len(df.columns), len(col_names))
-            df = df.rename({df.columns[i]: col_names[i] for i in range(n)})
+            n_cols = len(df.columns)
+            # Only use columns we're keeping; restrict to available indices
+            kept_in_bounds = [i for i in kept_indices if i < n_cols]
+            kept_names_bounds = [kept_names[j] for j in range(len(kept_indices)) if kept_indices[j] < n_cols]
+            df = df.select([df.columns[i] for i in kept_in_bounds])
+            df = df.rename({df.columns[j]: kept_names_bounds[j] for j in range(len(kept_in_bounds))})
 
-    # Clean column names (in case of duplicates or extra spaces)
+    # Clean column names (in case of extra spaces)
     new_cols = {col: _normalize_column_name(col) for col in df.columns}
     df = df.rename(new_cols)
 
@@ -135,7 +192,8 @@ def _load_excel_table(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int, in
     if CAPTIVE_COL not in df.columns or CLIENT_COL not in df.columns:
         raise ValueError(f"Missing required columns. Found: {df.columns}")
 
-    return df, header_cells
+    load_metadata = {"header_issues": header_issues} if header_issues else {}
+    return df, header_cells, load_metadata
 
 
 def _clean_and_aggregate(df: pl.DataFrame) -> pl.DataFrame:
@@ -252,7 +310,7 @@ def ingest_salesforce(
     canonical_period, period_from_filename, period_from_header, discrepancy_notes,
     file_type, filenames).
     """
-    df, header_cells = _load_excel_table(contents)
+    df, header_cells, load_metadata = _load_excel_table(contents)
     period_from_filename = parse_period_from_filename(filename)
     period_from_header = parse_period_from_header_cells(header_cells)
 
@@ -296,16 +354,19 @@ def ingest_salesforce(
     period_from_filename_str = format_period(period_from_filename[0], period_from_filename[1]) if period_from_filename else None
     period_from_header_str = format_period(period_from_header[0], period_from_header[1]) if period_from_header else None
 
+    ingestion_metadata = {
+        "canonical_period": canonical_period_str,
+        "period_from_filename": period_from_filename_str,
+        "period_from_header": period_from_header_str,
+        "discrepancy_notes": discrepancy_notes,
+        "file_type": file_type,
+        "filenames": [filename] if filename else [],
+    }
+    if load_metadata.get("header_issues"):
+        ingestion_metadata["header_issues"] = load_metadata["header_issues"]
     return {
         "data": grouped.to_dicts(),
-        "ingestion_metadata": {
-            "canonical_period": canonical_period_str,
-            "period_from_filename": period_from_filename_str,
-            "period_from_header": period_from_header_str,
-            "discrepancy_notes": discrepancy_notes,
-            "file_type": file_type,
-            "filenames": [filename] if filename else [],
-        },
+        "ingestion_metadata": ingestion_metadata,
     }
 
 
