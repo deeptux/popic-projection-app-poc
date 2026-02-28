@@ -48,6 +48,8 @@ import {
   setSelectedCommissionCleanedIndex,
   setSelectedReferralRawIndex,
   setSelectedReferralCleanedIndex,
+  setCommissionCleanedSlots,
+  setReferralCleanedSlots,
   resetSpreadsheetsUpload
 } from '../store/spreadsheets';
 
@@ -472,6 +474,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       this.fileTypeError.set(null);
       this.filesForCommissionCleanedRequest = [...valid];
       this.clearCommissionAnalyticsCacheAndCharts();
+      this.store.dispatch(setCommissionCleanedSlots({ filenames: [] }));
       this.store.dispatch(setSelectedCommissionRawIndex({ index: 0 }));
       this.store.dispatch(setSelectedCommissionCleanedIndex({ index: 0 }));
       this.commissionSubTab = 'raw';
@@ -489,6 +492,7 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
       }
       this.fileTypeError.set(null);
       this.filesForReferralCleanedRequest = [...valid];
+      this.store.dispatch(setReferralCleanedSlots({ filenames: [] }));
       this.store.dispatch(setSelectedReferralRawIndex({ index: 0 }));
       this.store.dispatch(setSelectedReferralCleanedIndex({ index: 0 }));
       this.referralSubTab = 'raw';
