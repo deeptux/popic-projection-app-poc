@@ -1,0 +1,5 @@
+# Cursor IDE
+.cursor/
+
+# Backend debug logs
+backend/debug*.log
