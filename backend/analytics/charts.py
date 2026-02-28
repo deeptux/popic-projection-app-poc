@@ -183,3 +183,46 @@ def pie_popic_fee_comparison(data: list[dict[str, Any]], columns: list[str]) -> 
             {"label": "POPIC Fee RAP", "value": total_rap, "percent": round(100.0 * total_rap / combined, 2)},
         ]
     }
+
+
+# --- Commission report analytics (January–December columns) ---
+COMMISSION_MONTH_LABELS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+COMMISSION_MONTH_COMMISSION_COLS = [
+    "January Commission", "February Commission", "March Commission", "April Commission",
+    "May Commission", "June Commission", "July Commission", "August Commission",
+    "September Commission", "October Commission", "November Commission", "December Commission",
+]
+COMMISSION_MONTH_PNL_COLS = [
+    "January P&L", "February P&L", "March P&L", "April P&L", "May P&L", "June P&L",
+    "July P&L", "August P&L", "September P&L", "October P&L", "November P&L", "December P&L",
+]
+
+
+def _commission_monthly_totals(data: list[dict[str, Any]], columns: list[str], month_cols: list[str]) -> dict[str, Any]:
+    """Sum each month column across all rows. Returns labels (month names) and values."""
+    found = [c for c in month_cols if c in columns]
+    if len(found) != len(month_cols):
+        missing = set(month_cols) - set(columns)
+        return {"error": f"Missing commission columns: {sorted(missing)}"}
+    values = []
+    for col in month_cols:
+        total = 0.0
+        for row in data:
+            v = _to_float(row.get(col))
+            if v is not None:
+                total += v
+        values.append(total)
+    return {"labels": COMMISSION_MONTH_LABELS[: len(values)], "values": values}
+
+
+def commission_monthly_commission_line(data: list[dict[str, Any]], columns: list[str]) -> dict[str, Any]:
+    """Totals per month for January Commission–December Commission. For line chart (months on X)."""
+    return _commission_monthly_totals(data, columns, COMMISSION_MONTH_COMMISSION_COLS)
+
+
+def commission_monthly_pnl_bar(data: list[dict[str, Any]], columns: list[str]) -> dict[str, Any]:
+    """Totals per month for January P&L–December P&L. For bar chart (months on X)."""
+    return _commission_monthly_totals(data, columns, COMMISSION_MONTH_PNL_COLS)
