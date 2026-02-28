@@ -18,6 +18,14 @@ import {
   commissionCleanedFileError,
   setSelectedCommissionRawIndex,
   setSelectedCommissionCleanedIndex,
+  setReferralRawSlots,
+  setReferralCleanedSlots,
+  referralRawFileSuccess,
+  referralRawFileError,
+  referralCleanedFileSuccess,
+  referralCleanedFileError,
+  setSelectedReferralRawIndex,
+  setSelectedReferralCleanedIndex,
 } from './spreadsheets.actions';
 
 export interface SpreadsheetsState {
@@ -29,6 +37,10 @@ export interface SpreadsheetsState {
   commissionCleanedFileResults: FileResultSlot[];
   selectedCommissionRawIndex: number;
   selectedCommissionCleanedIndex: number;
+  referralRawFileResults: FileResultSlot[];
+  referralCleanedFileResults: FileResultSlot[];
+  selectedReferralRawIndex: number;
+  selectedReferralCleanedIndex: number;
 }
 
 const initialState: SpreadsheetsState = {
@@ -40,6 +52,10 @@ const initialState: SpreadsheetsState = {
   commissionCleanedFileResults: [],
   selectedCommissionRawIndex: 0,
   selectedCommissionCleanedIndex: 0,
+  referralRawFileResults: [],
+  referralCleanedFileResults: [],
+  selectedReferralRawIndex: 0,
+  selectedReferralCleanedIndex: 0,
 };
 
 export const spreadsheetsReducer = createReducer(
@@ -170,5 +186,61 @@ export const spreadsheetsReducer = createReducer(
   on(setSelectedCommissionCleanedIndex, (state, { index }) => ({
     ...state,
     selectedCommissionCleanedIndex: index,
+  })),
+  on(setReferralRawSlots, (state, { filenames }) => ({
+    ...state,
+    referralRawFileResults: filenames.map(filename => ({ filename, loading: true })),
+    selectedReferralRawIndex: 0,
+  })),
+  on(referralRawFileSuccess, (state, { index, result }) => {
+    const next = [...state.referralRawFileResults];
+    if (next[index]) {
+      next[index] = {
+        filename: result.filename,
+        loading: false,
+        data: result.data,
+        columns: result.columns,
+      };
+    }
+    return { ...state, referralRawFileResults: next };
+  }),
+  on(referralRawFileError, (state, { index, error }) => {
+    const next = [...state.referralRawFileResults];
+    if (next[index]) {
+      next[index] = { ...next[index], loading: false, error: error || 'Upload failed' };
+    }
+    return { ...state, referralRawFileResults: next };
+  }),
+  on(setReferralCleanedSlots, (state, { filenames }) => ({
+    ...state,
+    referralCleanedFileResults: filenames.map(filename => ({ filename, loading: true })),
+    selectedReferralCleanedIndex: 0,
+  })),
+  on(referralCleanedFileSuccess, (state, { index, result }) => {
+    const next = [...state.referralCleanedFileResults];
+    if (next[index]) {
+      next[index] = {
+        filename: result.filename,
+        loading: false,
+        data: result.data,
+        columns: result.columns,
+      };
+    }
+    return { ...state, referralCleanedFileResults: next };
+  }),
+  on(referralCleanedFileError, (state, { index, error }) => {
+    const next = [...state.referralCleanedFileResults];
+    if (next[index]) {
+      next[index] = { ...next[index], loading: false, error: error || 'Upload failed' };
+    }
+    return { ...state, referralCleanedFileResults: next };
+  }),
+  on(setSelectedReferralRawIndex, (state, { index }) => ({
+    ...state,
+    selectedReferralRawIndex: index,
+  })),
+  on(setSelectedReferralCleanedIndex, (state, { index }) => ({
+    ...state,
+    selectedReferralCleanedIndex: index,
   })),
 );

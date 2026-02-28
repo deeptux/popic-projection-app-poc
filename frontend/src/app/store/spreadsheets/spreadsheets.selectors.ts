@@ -59,6 +59,31 @@ export const selectCommissionCleanedSlotCount = createSelector(
   slots => slots.length
 );
 
+export const selectReferralRawFileResults = createSelector(
+  selectSpreadsheetsState,
+  state => state.referralRawFileResults
+);
+
+export const selectReferralCleanedFileResults = createSelector(
+  selectSpreadsheetsState,
+  state => state.referralCleanedFileResults
+);
+
+export const selectSelectedReferralRawIndex = createSelector(
+  selectSpreadsheetsState,
+  state => state.selectedReferralRawIndex
+);
+
+export const selectSelectedReferralCleanedIndex = createSelector(
+  selectSpreadsheetsState,
+  state => state.selectedReferralCleanedIndex
+);
+
+export const selectHasAnyReferralRawResult = createSelector(
+  selectReferralRawFileResults,
+  slots => slots.length > 0
+);
+
 export const selectHasAnyRawResult = createSelector(
   selectRawFileResults,
   slots => slots.length > 0

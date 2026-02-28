@@ -8,6 +8,8 @@ import {
   uploadCleanedFiles,
   uploadCommissionRawFiles,
   uploadCommissionCleanedFiles,
+  uploadReferralRawFiles,
+  uploadReferralCleanedFiles,
   rawFileSuccess,
   rawFileError,
   cleanedFileSuccess,
@@ -16,10 +18,16 @@ import {
   commissionRawFileError,
   commissionCleanedFileSuccess,
   commissionCleanedFileError,
+  referralRawFileSuccess,
+  referralRawFileError,
+  referralCleanedFileSuccess,
+  referralCleanedFileError,
   setRawSlots,
   setCleanedSlots,
   setCommissionRawSlots,
   setCommissionCleanedSlots,
+  setReferralRawSlots,
+  setReferralCleanedSlots,
   SpreadsheetsResponse
 } from './spreadsheets.actions';
 import { Store } from '@ngrx/store';
@@ -30,6 +38,8 @@ const RAW_ENDPOINT = `${API_BASE}/upload/salesforce-captive-summary/basic`;
 const CLEANED_ENDPOINT = `${API_BASE}/upload/salesforce-captive-summary`;
 const COMMISSION_RAW_ENDPOINT = `${API_BASE}/upload/commission-report/basic`;
 const COMMISSION_CLEANED_ENDPOINT = `${API_BASE}/upload/commission-report`;
+const REFERRAL_RAW_ENDPOINT = `${API_BASE}/upload/referral-report/basic`;
+const REFERRAL_CLEANED_ENDPOINT = `${API_BASE}/upload/referral-report`;
 
 export class SpreadsheetsEffects {
   private readonly actions$ = inject(Actions);
@@ -129,6 +139,58 @@ export class SpreadsheetsEffects {
             catchError(err =>
               of(
                 commissionCleanedFileError({
+                  index,
+                  error: err?.message || err?.error?.detail || 'Request failed'
+                })
+              )
+            )
+          );
+        });
+        return observables.length > 0 ? merge(...observables) : of();
+      })
+    )
+  );
+
+  uploadReferralRawFiles$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(uploadReferralRawFiles),
+      mergeMap(({ files }) => {
+        const filenames = files.map(f => f.name);
+        this.store.dispatch(setReferralRawSlots({ filenames }));
+        const observables = files.map((file, index) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          return this.http.post<SpreadsheetsResponse>(REFERRAL_RAW_ENDPOINT, formData).pipe(
+            map(result => referralRawFileSuccess({ index, result })),
+            catchError(err =>
+              of(
+                referralRawFileError({
+                  index,
+                  error: err?.message || err?.error?.detail || 'Request failed'
+                })
+              )
+            )
+          );
+        });
+        return observables.length > 0 ? merge(...observables) : of();
+      })
+    )
+  );
+
+  uploadReferralCleanedFiles$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(uploadReferralCleanedFiles),
+      mergeMap(({ files }) => {
+        const filenames = files.map(f => f.name);
+        this.store.dispatch(setReferralCleanedSlots({ filenames }));
+        const observables = files.map((file, index) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          return this.http.post<SpreadsheetsResponse>(REFERRAL_CLEANED_ENDPOINT, formData).pipe(
+            map(result => referralCleanedFileSuccess({ index, result })),
+            catchError(err =>
+              of(
+                referralCleanedFileError({
                   index,
                   error: err?.message || err?.error?.detail || 'Request failed'
                 })
