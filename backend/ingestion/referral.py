@@ -92,23 +92,36 @@ def _normalize_referral_header(col: str) -> str:
 
 def _find_referral_table_start_row(df_raw: pl.DataFrame) -> int:
     """
-    Find 0-based row index where the table starts (row containing Captive Name and Client).
-    Uses flexible matching. Assumes df_raw was read with has_header=False.
+    Find 0-based row index where the table starts.
+    Prefer a row that has Vendor (or Referrer) and at least one of Captive Name / Client Name.
+    Fall back to row with both Captive Name and Client Name. Skip rows that look like
+    a title row (e.g. first cell is "Referral Fee %" and no key columns).
     """
     for i in range(min(df_raw.height, REFERRAL_HEADER_SCAN_ROWS)):
         row = df_raw.row(i, named=False)
+        has_vendor = False
         has_captive = False
         has_client = False
-        for cell in row:
-            if cell is None:
-                continue
-            s = str(cell).strip()
-            if header_matches_canonical(CAPTIVE_COL, s):
-                has_captive = True
-            if header_matches_canonical(CLIENT_COL, s):
-                has_client = True
-            if has_captive and has_client:
-                return i
+        first_cell = ""
+        for c, cell in enumerate(row):
+            if cell is not None:
+                s = str(cell).strip()
+                if c == 0:
+                    first_cell = s
+                if not s:
+                    continue
+                if header_matches_canonical(VENDOR_COL, s):
+                    has_vendor = True
+                if header_matches_canonical(CAPTIVE_COL, s):
+                    has_captive = True
+                if header_matches_canonical(CLIENT_COL, s):
+                    has_client = True
+        # Require at least Vendor + one of Captive/Client, or both Captive and Client
+        if (has_vendor and (has_captive or has_client)) or (has_captive and has_client):
+            return i
+        # Skip obvious non-header: first cell is "Referral Fee %" and no key columns
+        if first_cell and "referral" in first_cell.lower() and "fee" in first_cell.lower():
+            continue
     return 0
 
 
@@ -148,16 +161,6 @@ def _load_referral_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int,
         _uniquified.append(base if _seen[base] == 1 else f"{base}_{_seen[base]}")
     col_names = _uniquified
 
-    # #region agent log
-    import json
-    _seen2: dict[str, list[int]] = {}
-    for i, name in enumerate(col_names):
-        _seen2.setdefault(name, []).append(i)
-    _dupes = {k: v for k, v in _seen2.items() if len(v) > 1}
-    with open("debug-4ae5bc.log", "a") as _f:
-        _f.write(json.dumps({"sessionId": "4ae5bc", "hypothesisId": "H1-H5", "location": "referral._load_referral_excel", "message": "header and col_names", "data": {"header_row": header_row, "names_row": [str(x) for x in names_row], "col_names": col_names, "duplicate_values": list(_dupes.keys()), "duplicate_indices": _dupes, "len_col_names": len(col_names)}, "timestamp": __import__("time").time() * 1000}) + "\n")
-    # #endregion
-
     df_data = df_raw.slice(header_row + 1)
     if df_data.height == 0:
         df = pl.DataFrame(schema={c: pl.Utf8 for c in col_names})
@@ -167,13 +170,6 @@ def _load_referral_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int,
             orient="row",
         )
         n = min(len(df.columns), len(col_names))
-        # #region agent log
-        _rename_map = {df.columns[i]: col_names[i] for i in range(n)}
-        _target_names = list(_rename_map.values())
-        _target_dupes = [x for x in _target_names if _target_names.count(x) > 1]
-        with open("debug-4ae5bc.log", "a") as _f:
-            _f.write(json.dumps({"sessionId": "4ae5bc", "hypothesisId": "H3", "location": "referral._load_referral_excel.rename", "message": "before rename", "data": {"n": n, "df_columns": df.columns[:n], "rename_targets": _target_names, "duplicate_targets": list(set(_target_dupes))}, "timestamp": __import__("time").time() * 1000}) + "\n")
-        # #endregion
         df = df.rename({df.columns[i]: col_names[i] for i in range(n)})
 
     new_cols = {col: _normalize_referral_header(col) for col in df.columns}
@@ -192,11 +188,17 @@ def _load_referral_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int,
     if mapping:
         df = df.rename(mapping)
 
-    missing = [c for c in (VENDOR_COL, CAPTIVE_COL, CLIENT_COL) if c not in df.columns]
-    if missing:
+    # Vendor and Captive Name are required; Client is optional (some reports omit it)
+    missing_required = [c for c in (VENDOR_COL, CAPTIVE_COL) if c not in df.columns]
+    if missing_required:
         raise ValueError(
-            f"Missing required referral columns {missing}. Found: {df.columns}"
+            f"Missing required referral columns {missing_required}. Found: {list(df.columns)}. "
+            "Ensure the spreadsheet has a header row with 'Vendor' (or 'Referrer') and 'Captive Name'. "
+            "'Client Name (in POPIC)' is optional. If the table is below a title block, the header row must appear within the first 30 rows."
         )
+    # Add Client column if missing so grouping and output order stay consistent
+    if CLIENT_COL not in df.columns:
+        df = df.with_columns(pl.lit("").alias(CLIENT_COL))
 
     return df, header_cells
 

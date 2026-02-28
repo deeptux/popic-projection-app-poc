@@ -44,7 +44,7 @@ def _key_tokens_match(canonical: str, n_act: str) -> bool:
     if canonical == "Captive Name":
         return any(t in n_act for t in _CAPTIVE_KEY_ANY) and any(t in n_act for t in _CAPTIVE_KEY_ALL)
     if canonical == "Client Name (in POPIC)":
-        return any(t in n_act for t in _CLIENT_KEY_ANY) and "name" in n_act
+        return any(t in n_act for t in _CLIENT_KEY_ANY)  # allow "Client" or "Client Name"
     if canonical == "Salesperson":
         return any(t in n_act for t in _SALESPERSON_KEY_ANY)
     if canonical == "Vendor":
