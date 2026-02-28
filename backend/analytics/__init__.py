@@ -6,6 +6,8 @@ from analytics.charts import (
     pie_popic_fee_rlip,
     pie_popic_fee_rap,
     pie_popic_fee_comparison,
+    commission_monthly_commission_line,
+    commission_monthly_pnl_bar,
 )
 
 __all__ = [
@@ -14,4 +16,6 @@ __all__ = [
     "pie_popic_fee_rlip",
     "pie_popic_fee_rap",
     "pie_popic_fee_comparison",
+    "commission_monthly_commission_line",
+    "commission_monthly_pnl_bar",
 ]

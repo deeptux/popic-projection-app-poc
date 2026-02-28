@@ -11,6 +11,8 @@ from analytics.charts import (
     pie_popic_fee_rlip,
     pie_popic_fee_rap,
     pie_popic_fee_comparison,
+    commission_monthly_commission_line,
+    commission_monthly_pnl_bar,
 )
 
 import io
@@ -205,6 +207,26 @@ async def analytics_pie_popic_fee_comparison(body: AnalyticsBody = Body(...)):
     """Two slices: total POPIC Fee RLIP vs total POPIC Fee RAP (percentage of combined)."""
     data, columns = _analytics_payload(body)
     result = pie_popic_fee_comparison(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/commission-monthly-commission-line")
+async def analytics_commission_monthly_commission_line(body: AnalyticsBody = Body(...)):
+    """Monthly totals for January Commission–December Commission. For line chart."""
+    data, columns = _analytics_payload(body)
+    result = commission_monthly_commission_line(data, columns)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@app.post("/analytics/commission-monthly-pnl-bar")
+async def analytics_commission_monthly_pnl_bar(body: AnalyticsBody = Body(...)):
+    """Monthly totals for January P&L–December P&L. For bar chart."""
+    data, columns = _analytics_payload(body)
+    result = commission_monthly_pnl_bar(data, columns)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
