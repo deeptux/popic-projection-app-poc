@@ -178,13 +178,13 @@
 .spreadsheets-page .mat-mdc-header-cell,
 .spreadsheets-page .mat-mdc-cell {
   padding: var(--sp-pad-sm) var(--sp-pad-md) !important;
-  font-size: clamp(0.8rem, 0.7rem + 0.25vw, 0.95rem);
+  font-size: clamp(0.7rem, 0.6rem + 0.2vw, 0.85rem);
   line-height: 1.4;
   min-height: 2.75em;
   box-sizing: border-box;
 }
 .spreadsheets-page .mat-mdc-header-cell {
-  font-size: clamp(0.7rem, 0.65rem + 0.2vw, 0.8rem);
+  font-size: clamp(0.6rem, 0.55rem + 0.16vw, 0.75rem);
   min-height: 2.5em;
 }
 .spreadsheets-page .mat-mdc-row,
