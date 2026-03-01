@@ -1,3 +1,210 @@
+/* -------------------------------------------------------------------------
+   Fluid responsive: 320px – 2500px+
+   Typography and spacing scale with viewport.
+   ------------------------------------------------------------------------- */
+.spreadsheets-page {
+  font-size: clamp(14px, 13px + 0.2vw, 18px);
+  --sp-gap-xs: clamp(0.25rem, 0.5vw, 0.375rem);
+  --sp-gap-sm: clamp(0.5rem, 1vw, 0.75rem);
+  --sp-gap-md: clamp(0.75rem, 1.5vw, 1.25rem);
+  --sp-gap-lg: clamp(1rem, 2.5vw, 1.75rem);
+  --sp-gap-xl: clamp(1.25rem, 3vw, 2.5rem);
+  --sp-pad-sm: clamp(0.5rem, 1vw, 0.75rem);
+  --sp-pad-md: clamp(0.75rem, 2vw, 1.25rem);
+  --sp-pad-lg: clamp(1rem, 3vw, 2rem);
+  --sp-pad-xl: clamp(1.5rem, 4vw, 2.5rem);
+  --sp-pad-card: clamp(1rem, 3vw, 2rem);
+  --sp-radius: clamp(0.375rem, 0.75vw, 0.75rem);
+  --sp-radius-lg: clamp(0.5rem, 1.5vw, 1rem);
+  --sidebar-width: clamp(12rem, 14vw, 18rem);
+}
+
+.spreadsheets-page aside {
+  width: var(--sidebar-width) !important;
+  min-width: var(--sidebar-width);
+}
+.spreadsheets-page aside .sticky {
+  padding: var(--sp-pad-lg);
+}
+.spreadsheets-page aside nav a {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  border-radius: var(--sp-radius-lg);
+  font-size: 1em;
+}
+.spreadsheets-page aside img[alt="Popic Logo"] {
+  height: clamp(2.5rem, 5vw, 4rem);
+  max-width: 100%;
+}
+
+.spreadsheets-page main {
+  padding: var(--sp-pad-md) !important;
+}
+@media (min-width: 640px) {
+  .spreadsheets-page main {
+    padding: var(--sp-pad-lg) !important;
+  }
+}
+@media (min-width: 1024px) {
+  .spreadsheets-page main {
+    padding: var(--sp-pad-xl) !important;
+  }
+}
+
+.spreadsheets-page header {
+  margin-bottom: var(--sp-gap-xl);
+  gap: var(--sp-gap-md);
+}
+.spreadsheets-page header h1 {
+  font-size: clamp(1.35rem, 2vw + 1rem, 1.875rem);
+  font-weight: 700;
+}
+.spreadsheets-page header p.text-gray-500 {
+  margin-top: var(--sp-gap-xs);
+  font-size: 0.9em;
+}
+.spreadsheets-page header .relative input {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  padding-left: 2.5em;
+  font-size: 1em;
+}
+.spreadsheets-page header img.rounded-full {
+  width: clamp(2rem, 4vw, 2.5rem);
+  height: clamp(2rem, 4vw, 2.5rem);
+}
+
+.spreadsheets-page .flex.gap-2.p-1.bg-gray-200\/50 {
+  gap: var(--sp-gap-xs);
+  padding: var(--sp-gap-xs);
+  border-radius: var(--sp-radius-lg);
+}
+.spreadsheets-page .flex.gap-2.p-1.bg-gray-200\/50 button {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  border-radius: var(--sp-radius);
+  font-size: 0.95em;
+}
+
+.spreadsheets-page .bg-white.shadow-sm.rounded-2xl.p-8 {
+  padding: var(--sp-pad-card) !important;
+  border-radius: var(--sp-radius-lg);
+  margin-bottom: var(--sp-gap-xl);
+}
+.spreadsheets-page .bg-white.shadow-sm.rounded-2xl.p-8 h2 {
+  font-size: clamp(1.1rem, 1.5vw + 0.75rem, 1.35rem);
+  margin-bottom: var(--sp-gap-lg);
+}
+
+.spreadsheets-page [role="alert"] {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  margin-bottom: var(--sp-gap-md);
+  border-radius: var(--sp-radius-lg);
+  font-size: 0.95em;
+}
+
+.spreadsheets-page .border-2.border-dashed.rounded-xl {
+  padding: var(--sp-pad-lg);
+  min-height: clamp(6rem, 15vw, 8rem);
+  border-radius: var(--sp-radius-lg);
+  gap: var(--sp-gap-sm);
+}
+.spreadsheets-page .border-2.border-dashed.rounded-xl p {
+  font-size: 0.95em;
+}
+.spreadsheets-page .space-y-4 button.w-full.bg-gradient-to-r {
+  padding: var(--sp-pad-md) var(--sp-pad-lg);
+  border-radius: var(--sp-radius-lg);
+  font-size: 1em;
+}
+
+.spreadsheets-page .flex.border-b.border-gray-200.mb-4 {
+  margin-bottom: var(--sp-gap-md);
+}
+.spreadsheets-page .flex.border-b.border-gray-200.mb-4 button {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  font-size: 0.95em;
+}
+
+.spreadsheets-page .flex.border-b.border-gray-100.p-2.gap-1 {
+  padding: var(--sp-gap-sm);
+  gap: var(--sp-gap-xs);
+}
+.spreadsheets-page .flex.border-b.border-gray-100.p-2.gap-1 button {
+  padding: var(--sp-pad-sm) var(--sp-pad-md);
+  font-size: 0.9em;
+}
+
+/* File sub-tabs: horizontal scroll on small screens when filenames are long */
+.file-sub-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.file-sub-tabs-inner {
+  flex-wrap: nowrap;
+  min-width: min-content;
+}
+.file-sub-tabs-inner button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.file-sub-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+.file-sub-tabs::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+.file-sub-tabs::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.file-sub-tabs::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.spreadsheets-page .animate-fadeIn .p-6 {
+  padding: var(--sp-pad-lg) !important;
+}
+.spreadsheets-page .animate-fadeIn .-m-6 {
+  margin: calc(-1 * var(--sp-pad-lg));
+  margin-bottom: var(--sp-gap-md);
+}
+.spreadsheets-page .animate-fadeIn h2.font-bold {
+  font-size: clamp(1rem, 1.2vw + 0.75rem, 1.2rem);
+}
+
+.spreadsheets-page .mat-mdc-header-cell,
+.spreadsheets-page .mat-mdc-cell {
+  padding: var(--sp-pad-sm) var(--sp-pad-md) !important;
+  font-size: clamp(0.8rem, 0.7rem + 0.25vw, 0.95rem);
+  line-height: 1.4;
+  min-height: 2.75em;
+  box-sizing: border-box;
+}
+.spreadsheets-page .mat-mdc-header-cell {
+  font-size: clamp(0.7rem, 0.65rem + 0.2vw, 0.8rem);
+  min-height: 2.5em;
+}
+.spreadsheets-page .mat-mdc-row,
+.spreadsheets-page .mat-mdc-header-row {
+  min-height: 2.75em;
+}
+
+.spreadsheets-page .checked-stats-charts .grid {
+  gap: var(--sp-gap-lg);
+  margin-bottom: var(--sp-gap-lg);
+}
+.spreadsheets-page .checked-stats-chart-section h3 {
+  font-size: clamp(0.9rem, 1vw + 0.6rem, 1rem);
+  margin-bottom: var(--sp-gap-sm);
+}
+
+.spreadsheets-page .grid.gap-6 {
+  gap: var(--sp-gap-lg);
+}
+.spreadsheets-page .grid.gap-6.lg\:gap-8 {
+  gap: var(--sp-gap-xl);
+}
+
 /* Ensure the table takes full width */
 table {
   width: 100%;
@@ -25,14 +232,14 @@ table {
   background-color: #f1f5f9;
 }
 
-/* Circular loader - red-orange gradient ring matching side nav */
+/* Circular loader - fluid size, red-orange gradient ring */
 .etl-loader-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: clamp(2.5rem, 8vw, 3.5rem);
+  height: clamp(2.5rem, 8vw, 3.5rem);
   margin: 0 auto 1rem;
 }
 
@@ -51,8 +258,8 @@ table {
 .etl-loader-inner {
   position: relative;
   z-index: 1;
-  width: 44px;
-  height: 44px;
+  width: clamp(1.75rem, 6vw, 2.75rem);
+  height: clamp(1.75rem, 6vw, 2.75rem);
   border-radius: 50%;
   background: #f9fafb;
 }
@@ -65,26 +272,26 @@ table {
 
 .etl-loading-text {
   color: #6b7280;
-  font-size: 0.875rem;
+  font-size: 0.95em;
   text-align: center;
-  max-width: 280px;
+  max-width: min(280px, 90vw);
   margin: 0 auto;
 }
 
-/* Chart.js container - fixed height so chart renders correctly */
+/* Chart.js container - fluid height so chart renders correctly */
 .chart-container {
   position: relative;
   width: 100%;
-  min-height: 12rem;
+  min-height: clamp(10rem, 25vw, 12rem);
 }
 .chart-container-lg {
-  min-height: 20rem;
-  height: 22rem;
+  min-height: clamp(14rem, 30vw, 20rem);
+  height: clamp(16rem, 35vw, 22rem);
 }
 @media (min-width: 768px) {
   .chart-container-lg {
-    min-height: 24rem;
-    height: 26rem;
+    min-height: clamp(18rem, 32vw, 24rem);
+    height: clamp(20rem, 38vw, 26rem);
   }
 }
 .chart-container canvas {
@@ -99,20 +306,20 @@ table {
   min-width: 0;
 }
 
-/* Drop zone file thumbnails */
+/* Drop zone file thumbnails - fluid size */
 .drop-zone-thumbnail {
   position: relative;
-  width: 96px;
-  min-height: 88px;
-  padding: 8px;
-  padding-top: 28px;
+  width: clamp(5rem, 12vw, 6rem);
+  min-height: clamp(4rem, 10vw, 5.5rem);
+  padding: var(--sp-gap-xs, 0.25rem);
+  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: var(--sp-radius, 0.5rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-gap-xs, 0.25rem);
   flex-shrink: 0;
 }
 
@@ -120,14 +327,14 @@ table {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 20px;
-  height: 20px;
+  width: clamp(1.125rem, 2.5vw, 1.25rem);
+  height: clamp(1.125rem, 2.5vw, 1.25rem);
   padding: 0;
   border: none;
   border-radius: 4px;
   background: #f3f4f6;
   color: #6b7280;
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -146,7 +353,7 @@ table {
 }
 
 .drop-zone-thumbnail-name {
-  font-size: 0.7rem;
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
   color: #374151;
   text-align: center;
   word-break: break-all;
