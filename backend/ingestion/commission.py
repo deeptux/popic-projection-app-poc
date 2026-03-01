@@ -4,6 +4,7 @@ Supports table discovery under header blocks; grouping by (Salesperson, Captive 
 subtotal/count/total row filtering; forward-fill of key columns; RLIP/RAP via Income Type (summed together per key).
 """
 import io
+import math
 from typing import Optional
 
 import polars as pl
@@ -35,6 +36,9 @@ COMMISSION_SUM_COLUMNS = COMMISSION_MONTH_PNL + COMMISSION_MONTH_COMMISSION + ["
 
 # Take first value per group (non-additive)
 COMMISSION_FIRST_COLUMNS = ["Year", "Income Type", "Commission Rate", "Account Name"]
+
+# All commission-specific columns used to validate file type (require 35% present)
+COMMISSION_TARGET_COLUMNS = COMMISSION_SUM_COLUMNS + COMMISSION_FIRST_COLUMNS
 
 # Cleaned Data output column order: key cols, then Income Type/Commission Rate/Account Name, then Commissions (Jan–Dec, Total), then P&L (Jan–Dec)
 CLEANED_OUTPUT_COLUMN_ORDER = (
@@ -130,8 +134,14 @@ def _load_commission_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[in
 
     if SALESPERSON_COL not in df.columns or CAPTIVE_COL not in df.columns or CLIENT_COL not in df.columns:
         raise ValueError(
-            f"Missing required commission columns (Salesperson, Captive Name, Client). Found: {df.columns}"
+            "Upload a valid Commission Report file."
         )
+
+    # Require at least 35% of COMMISSION_TARGET_COLUMNS so we only accept Commission Report files
+    target_present = [c for c in COMMISSION_TARGET_COLUMNS if c in df.columns]
+    min_required = math.ceil(0.35 * len(COMMISSION_TARGET_COLUMNS))
+    if len(target_present) < min_required:
+        raise ValueError("Upload a valid Commission Report file.")
 
     return df, header_cells
 

@@ -5,6 +5,7 @@ subtotal/count/total row filtering; forward-fill of key columns; aggregation of 
 fee amounts by month and POPIC fee.
 """
 import io
+import math
 from typing import Optional
 
 import polars as pl
@@ -69,6 +70,9 @@ REFERRAL_SUM_COLUMNS = (
 
 # Non-additive columns (take first per group)
 REFERRAL_FIRST_COLUMNS = [YEAR_COL, REFERRAL_PERCENT_COL]
+
+# All referral-specific columns used to validate file type (require 35% present)
+REFERRAL_TARGET_COLUMNS = REFERRAL_SUM_COLUMNS + REFERRAL_FIRST_COLUMNS
 
 # Cleaned output column order: key cols, then Referral Fee %, Year, POPIC Fee, then months, then P&L months
 CLEANED_OUTPUT_COLUMN_ORDER = (
@@ -191,11 +195,14 @@ def _load_referral_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int,
     # Vendor and Captive Name are required; Client is optional (some reports omit it)
     missing_required = [c for c in (VENDOR_COL, CAPTIVE_COL) if c not in df.columns]
     if missing_required:
-        raise ValueError(
-            f"Missing required referral columns {missing_required}. Found: {list(df.columns)}. "
-            "Ensure the spreadsheet has a header row with 'Vendor' (or 'Referrer') and 'Captive Name'. "
-            "'Client Name (in POPIC)' is optional. If the table is below a title block, the header row must appear within the first 30 rows."
-        )
+        raise ValueError("Upload a valid Referral Report file.")
+
+    # Require at least 35% of REFERRAL_TARGET_COLUMNS so we only accept Referral Report files
+    target_present = [c for c in REFERRAL_TARGET_COLUMNS if c in df.columns]
+    min_required = math.ceil(0.35 * len(REFERRAL_TARGET_COLUMNS))
+    if len(target_present) < min_required:
+        raise ValueError("Upload a valid Referral Report file.")
+
     # Add Client column if missing so grouping and output order stay consistent
     if CLIENT_COL not in df.columns:
         df = df.with_columns(pl.lit("").alias(CLIENT_COL))
