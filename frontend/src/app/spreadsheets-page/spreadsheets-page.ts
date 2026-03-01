@@ -237,14 +237,59 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly hasReferralRawSubTabs = computed(() => this.referralRawSlotCount() >= 2);
   readonly hasReferralCleanedSubTabs = computed(() => this.referralCleanedSlotCount() >= 2);
 
+  /** True if error message looks like a generic HTTP failure (no server validation message). */
+  private isGenericUploadError(message: string): boolean {
+    if (!message || typeof message !== 'string') return false;
+    const m = message.toLowerCase();
+    return m.includes('http failure') || m.includes('unknown error') || (m.includes('bad request') && !m.includes('is invalid'));
+  }
+
   /** Shown above Salesforce drop zone when raw or cleaned upload failed (e.g. wrong file type). */
   readonly salesforceUploadErrorBanner = computed(() => {
     const rawSlots = this.rawFileResults();
     const cleanedSlots = this.cleanedFileResults();
     const rawWithError = rawSlots.find(slot => !!slot.error);
     const cleanedWithError = cleanedSlots.find(slot => !!slot.error);
-    const message = cleanedWithError?.error ?? rawWithError?.error ?? null;
-    return message || null;
+    const slot = cleanedWithError ?? rawWithError ?? null;
+    const message = slot?.error ?? null;
+    if (!message) return null;
+    if (this.isGenericUploadError(message)) {
+      const filename = slot?.filename ?? 'unknown';
+      return `Upload a valid Salesforce Captive Report file. The file ${filename} is invalid.`;
+    }
+    return message;
+  });
+
+  /** Shown above Commission drop zone when raw or cleaned upload failed (e.g. wrong file type). */
+  readonly commissionUploadErrorBanner = computed(() => {
+    const rawSlots = this.commissionRawFileResults();
+    const cleanedSlots = this.commissionCleanedFileResults();
+    const rawWithError = rawSlots.find(slot => !!slot.error);
+    const cleanedWithError = cleanedSlots.find(slot => !!slot.error);
+    const slot = cleanedWithError ?? rawWithError ?? null;
+    const message = slot?.error ?? null;
+    if (!message) return null;
+    if (this.isGenericUploadError(message)) {
+      const filename = slot?.filename ?? 'unknown';
+      return `Upload a valid Commission Report file. The file ${filename} is invalid.`;
+    }
+    return message;
+  });
+
+  /** Shown above Referral drop zone when raw or cleaned upload failed (e.g. wrong file type). */
+  readonly referralUploadErrorBanner = computed(() => {
+    const rawSlots = this.referralRawFileResults();
+    const cleanedSlots = this.referralCleanedFileResults();
+    const rawWithError = rawSlots.find(slot => !!slot.error);
+    const cleanedWithError = cleanedSlots.find(slot => !!slot.error);
+    const slot = cleanedWithError ?? rawWithError ?? null;
+    const message = slot?.error ?? null;
+    if (!message) return null;
+    if (this.isGenericUploadError(message)) {
+      const filename = slot?.filename ?? 'unknown';
+      return `Upload a valid Referral Report file. The file ${filename} is invalid.`;
+    }
+    return message;
   });
 
   readonly currentRawSlot = computed(() => {
