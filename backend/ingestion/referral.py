@@ -197,9 +197,10 @@ def _load_referral_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int,
     if missing_required:
         raise ValueError("Upload a valid Referral Report file.")
 
-    # Require at least 35% of REFERRAL_TARGET_COLUMNS so we only accept Referral Report files
+    # Require at least 35% of REFERRAL_TARGET_COLUMNS, or at least 3 target columns for shorter layouts
+    # (e.g. Year + POPIC Fee + Referral Fee % with no month columns).
     target_present = [c for c in REFERRAL_TARGET_COLUMNS if c in df.columns]
-    min_required = math.ceil(0.35 * len(REFERRAL_TARGET_COLUMNS))
+    min_required = min(3, math.ceil(0.35 * len(REFERRAL_TARGET_COLUMNS)))
     if len(target_present) < min_required:
         raise ValueError("Upload a valid Referral Report file.")
 
