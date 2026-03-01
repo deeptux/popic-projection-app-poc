@@ -1,4 +1,4 @@
-<div class="flex flex-col lg:flex-row min-h-screen bg-gray-50 font-sans items-stretch">
+<div class="spreadsheets-page flex flex-col lg:flex-row min-h-screen bg-gray-50 font-sans items-stretch">
     <aside
         class="hidden lg:flex w-52 bg-gradient-to-b from-[#FF7E5F] to-[#FD3A69] text-white flex-col shadow-xl z-10 lg:relative">
 
@@ -181,7 +181,7 @@
                             <div *ngIf="salesforceSubTab === 'raw'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
                                 <!-- Sub-tabs when 2+ files -->
-                                <div *ngIf="hasRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasRawSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of rawFileResults(); track slot.filename + $index) {
                                     <button (click)="setRawSubTab($index)"
                                         [class]="selectedRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -190,6 +190,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentRawSlot(); as slot) {
@@ -235,7 +236,7 @@
                             <!-- Cleaned Data content -->
                             <div *ngIf="salesforceSubTab === 'cleanedData'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCleanedSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of cleanedFileResults(); track slot.filename + $index) {
                                     <button (click)="setCleanedSubTab($index)"
                                         [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -244,6 +245,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentCleanedSlot(); as slot) {
@@ -272,7 +274,7 @@
 
                             <div *ngIf="salesforceSubTab === 'checkedStats'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCleanedSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCleanedSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of cleanedFileResults(); track slot.filename + $index) {
                                     <button (click)="setCleanedSubTabForCheckedStats($index)"
                                         [class]="selectedCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -281,6 +283,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (cleanedSlotCount() === 0 && rawSlotCount() > 0) {
@@ -546,7 +549,7 @@
 
                             <div *ngIf="commissionSubTab === 'raw'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCommissionRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCommissionRawSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of commissionRawFileResults(); track slot.filename + $index) {
                                     <button (click)="setCommissionRawSubTab($index)"
                                         [class]="selectedCommissionRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -555,6 +558,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentCommissionRawSlot(); as slot) {
@@ -599,8 +603,7 @@
 
                             <div *ngIf="commissionSubTab === 'cleanedData'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCommissionCleanedSubTabs()"
-                                    class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCommissionCleanedSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of commissionCleanedFileResults(); track slot.filename + $index) {
                                     <button (click)="setCommissionCleanedSubTab($index)"
                                         [class]="selectedCommissionCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -609,6 +612,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentCommissionCleanedSlot(); as slot) {
@@ -634,8 +638,7 @@
 
                             <div *ngIf="commissionSubTab === 'checkedStats'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasCommissionCleanedSubTabs()"
-                                    class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasCommissionCleanedSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of commissionCleanedFileResults(); track slot.filename + $index) {
                                     <button (click)="setCommissionCleanedSubTab($index)"
                                         [class]="selectedCommissionCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -644,6 +647,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (commissionCleanedSlotCount() === 0 && commissionRawSlotCount() > 0) {
@@ -789,7 +793,7 @@
 
                             <div *ngIf="referralSubTab === 'raw'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasReferralRawSubTabs()" class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasReferralRawSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of referralRawFileResults(); track slot.filename + $index) {
                                     <button (click)="setReferralRawSubTab($index)"
                                         [class]="selectedReferralRawIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -798,6 +802,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentReferralRawSlot(); as slot) {
@@ -842,8 +847,7 @@
 
                             <div *ngIf="referralSubTab === 'cleanedData'"
                                 class="animate-fadeIn bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
-                                <div *ngIf="hasReferralCleanedSubTabs()"
-                                    class="flex border-b border-gray-100 p-2 gap-1">
+                                <div *ngIf="hasReferralCleanedSubTabs()" class="file-sub-tabs"><div class="flex border-b border-gray-100 p-2 gap-1 file-sub-tabs-inner">
                                     @for (slot of referralCleanedFileResults(); track slot.filename + $index) {
                                     <button (click)="setReferralCleanedSubTab($index)"
                                         [class]="selectedReferralCleanedIndex() === $index ? 'bg-[#FF7E5F]/10 text-[#FD3A69] font-medium' : 'text-gray-600 hover:bg-gray-100'"
@@ -852,6 +856,7 @@
                                         File {{ $index + 1 }}: {{ truncateFilename(slot.filename, 40) }}
                                     </button>
                                     }
+                                </div>
                                 </div>
                                 <div class="p-6">
                                     @if (currentReferralCleanedSlot(); as slot) {
