@@ -114,8 +114,11 @@ async def Upload_CommissionReport(file: UploadFile = File(...)):
     contents = await file.read()
     try:
         result = ingest_commission(contents, filename=file.filename or None)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Upload a valid Commission Report file. The file {file.filename or 'unknown'} is invalid.",
+        )
     data = result["data"]
     columns = result.get("columns", list(data[0].keys()) if data else [])
     return {
@@ -147,8 +150,11 @@ async def Upload_ReferralReport(file: UploadFile = File(...)):
     contents = await file.read()
     try:
         result = ingest_referral(contents, filename=file.filename or None)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Upload a valid Referral Report file. The file {file.filename or 'unknown'} is invalid.",
+        )
     data = result["data"]
     columns = result.get("columns", list(data[0].keys()) if data else [])
     return {
