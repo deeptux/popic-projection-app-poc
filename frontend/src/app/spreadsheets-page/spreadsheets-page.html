@@ -1,62 +1,5 @@
-<div class="spreadsheets-page flex flex-col lg:flex-row min-h-screen bg-gray-50 font-sans items-stretch">
-    <aside
-        class="hidden lg:flex w-52 bg-gradient-to-b from-[#FF7E5F] to-[#FD3A69] text-white flex-col shadow-xl z-10 lg:relative">
-
-        <div class="sticky top-0 p-6 flex flex-col h-screen">
-
-            <div class="lg:hidden bg-white p-4 flex justify-between items-center shadow-sm sticky top-0 z-50">
-                <div class="flex items-center gap-2">
-                    <div class="bg-[#FF7E5F] p-1.5 rounded-lg">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="white">
-                            <path d="M6 4h8a5 5 0 0 1 0 10H8v6H6V4zm2 2v6h6a3 3 0 1 0 0-6H8z" />
-                        </svg>
-                    </div>
-                    <span class="text-xl font-bold tracking-wide text-gray-800">POPIC PROJECTION APP</span>
-                </div>
-                <button class="text-gray-600 focus:outline-none">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16m-7 6h7">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="flex items-center gap-2 mb-4">
-                <img src="assets/popic-logo.png" alt="Popic Logo"
-                    class="h-16 w-auto max-w-[180px] object-contain transition-transform hover:scale-105">
-            </div>
-
-            <nav class="flex-1 space-y-2">
-                <a href="#"
-                    class="flex items-center gap-4 px-4 py-3 text-white/90 hover:bg-white/10 rounded-xl transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                        </path>
-                    </svg>
-                    Overview
-                </a>
-
-                <a routerLink="/spreadsheets" routerLinkActive="bg-white text-[#FD3A69] font-bold shadow-md"
-                    class="flex items-center gap-4 bg-white text-[#FD3A69] px-4 py-3 rounded-xl shadow-md font-bold transition-all transform hover:scale-105">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z">
-                        </path>
-                    </svg>
-                    Spreadsheets
-                </a>
-
-            </nav>
-
-        </div>
-
-    </aside>
-
-    <main class="flex-1 p-4 sm:p-8 overflow-x-hidden">
-
-        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+<div class="spreadsheets-page">
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-[#FD3A69]">Uploaded Spreadsheets</h1>
                 <p class="text-gray-500 text-sm mt-1">Input Pre-requisite Spreadsheet Files</p>
@@ -904,6 +847,4 @@
             </div>
 
         </div>
-
-    </main>
 </div>

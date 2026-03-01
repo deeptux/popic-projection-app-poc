@@ -36,16 +36,19 @@
   max-width: 100%;
 }
 
-.spreadsheets-page main {
+.spreadsheets-page main,
+.spreadsheets-page {
   padding: var(--sp-pad-md) !important;
 }
 @media (min-width: 640px) {
-  .spreadsheets-page main {
+  .spreadsheets-page main,
+  .spreadsheets-page {
     padding: var(--sp-pad-lg) !important;
   }
 }
 @media (min-width: 1024px) {
-  .spreadsheets-page main {
+  .spreadsheets-page main,
+  .spreadsheets-page {
     padding: var(--sp-pad-xl) !important;
   }
 }

@@ -1,0 +1,13 @@
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background: #f9fafb;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.main-layout-content {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
