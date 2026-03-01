@@ -73,7 +73,7 @@ async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...), active_t
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail="Upload a valid Salesforce Captive Report file.",
+                detail=f"Upload a valid Salesforce Captive Report file. The file {file.filename or 'unknown'} is invalid.",
             )
         final_list = result["data"]
         ingestion_metadata = result["ingestion_metadata"]
