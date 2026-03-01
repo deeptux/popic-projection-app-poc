@@ -1,0 +1,212 @@
+/* -------------------------------------------------------------------------
+   Sidenav: collapsible, responsive 320px – 2500px+
+   Fluid typography and spacing; desktop = sidebar, mobile/tablet = drawer.
+   ------------------------------------------------------------------------- */
+
+/* Mobile: handle on left edge to open drawer */
+.sidenav-drawer-handle {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1001;
+  width: clamp(2rem, 5vw, 2.5rem);
+  height: clamp(3rem, 12vw, 4rem);
+  padding: 0;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  background: linear-gradient(135deg, #FF7E5F, #FD3A69);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  transition: width 0.2s, height 0.2s;
+}
+.sidenav-drawer-handle:hover {
+  width: clamp(2.25rem, 6vw, 2.75rem);
+}
+.sidenav-drawer-handle-icon {
+  width: clamp(1rem, 3vw, 1.25rem);
+  height: clamp(1rem, 3vw, 1.25rem);
+}
+
+/* Backdrop when drawer open on mobile */
+.sidenav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  animation: sidenav-fadeIn 0.2s ease-out;
+}
+@keyframes sidenav-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sidenav panel */
+.sidenav {
+  --sidenav-pad: clamp(0.5rem, 1.5vw, 1rem);
+  --sidenav-font: clamp(0.875rem, 0.8rem + 0.2vw, 1rem);
+  --sidenav-gap: clamp(0.375rem, 1vw, 0.5rem);
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1002;
+  background: linear-gradient(180deg, #FF7E5F 0%, #FD3A69 100%);
+  color: white;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+}
+
+/* Desktop (1024px+): wider sidebar so nav text doesn’t ellipsis; scales with viewport */
+.sidenav--desktop {
+  --sidenav-width: clamp(11rem, 10vw + 8rem, 18rem);
+  --sidenav-width-collapsed: clamp(2.75rem, 6vw, 3.5rem);
+  width: var(--sidenav-width);
+  position: relative;
+  flex-shrink: 0;
+  height: 100vh;
+}
+.sidenav--desktop.sidenav--collapsed {
+  width: var(--sidenav-width-collapsed);
+}
+
+/* Mobile/tablet: drawer width only as wide as needed for nav text, no ellipsis */
+.sidenav:not(.sidenav--desktop) {
+  width: clamp(10rem, 64vw, 13rem);
+  max-width: 13rem;
+  min-width: 10rem;
+  transform: translateX(-100%);
+  height: 100vh;
+}
+.sidenav--drawer-open:not(.sidenav--desktop) {
+  transform: translateX(0);
+}
+
+.sidenav-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--sidenav-pad);
+  padding-right: 0;
+}
+
+/* Chevron at middle-end (right edge, vertically centered) */
+.sidenav-chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(1.5rem, 4vw, 2rem);
+  height: clamp(2.5rem, 8vw, 3.5rem);
+  padding: 0;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 2;
+}
+.sidenav-chevron:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.sidenav-chevron-icon {
+  width: clamp(0.875rem, 2vw, 1rem);
+  height: clamp(0.875rem, 2vw, 1rem);
+  transition: transform 0.25s ease;
+}
+.sidenav--collapsed .sidenav-chevron-icon {
+  transform: rotate(180deg);
+}
+
+.sidenav-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: clamp(1.5rem, 4vw, 2rem);
+}
+
+/* Logo: fluid size; collapsed = small logo */
+.sidenav-logo-wrap {
+  flex-shrink: 0;
+  margin-bottom: var(--sidenav-gap);
+}
+.sidenav-logo {
+  height: clamp(2.5rem, 5vw, 4rem);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transition: opacity 0.2s;
+}
+.sidenav--collapsed .sidenav-logo {
+  height: clamp(2rem, 4vw, 2.5rem);
+  max-width: 90%;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Nav links: fluid font and padding */
+.sidenav-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sidenav-gap);
+  margin-top: var(--sidenav-gap);
+}
+.sidenav-link {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding: clamp(0.5rem, 1vw, 0.625rem) var(--sidenav-pad);
+  border-radius: clamp(0.5rem, 1vw, 0.75rem);
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: var(--sidenav-font);
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidenav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.sidenav-link--active {
+  background: white;
+  color: #FD3A69;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.sidenav-link--active:hover {
+  background: rgba(255, 255, 255, 0.98);
+  color: #FD3A69;
+}
+.sidenav-link-icon {
+  flex-shrink: 0;
+  width: clamp(1.125rem, 2.5vw, 1.25rem);
+  height: clamp(1.125rem, 2.5vw, 1.25rem);
+}
+.sidenav-link-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidenav--collapsed .sidenav-link-text {
+  display: none;
+}
+.sidenav--collapsed .sidenav-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}

@@ -3,3 +3,17 @@
 body {
   font-family: 'Nunito', sans-serif;
 }
+
+.dashboard-page {
+  padding: clamp(0.75rem, 2vw, 1rem);
+}
+@media (min-width: 640px) {
+  .dashboard-page {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+}
+@media (min-width: 1024px) {
+  .dashboard-page {
+    padding: clamp(1.25rem, 4vw, 2rem);
+  }
+}
