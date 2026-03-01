@@ -68,7 +68,13 @@ async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...), active_t
         final_list = df.to_dicts()
     else:
         # Process specialized Salesforce consolidation with metadata
-        result = ingest_salesforce(contents, filename=file.filename or None)
+        try:
+            result = ingest_salesforce(contents, filename=file.filename or None)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Upload a valid Salesforce Captive Report file.",
+            )
         final_list = result["data"]
         ingestion_metadata = result["ingestion_metadata"]
         if len(final_list) > 0:

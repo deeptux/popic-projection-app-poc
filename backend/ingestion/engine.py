@@ -5,6 +5,7 @@ table discovery under header blocks; period from table/filename/header with disc
 merge of separate RLIP and RAP files with same-period checksum.
 """
 import io
+import math
 from typing import Optional
 
 import polars as pl
@@ -189,8 +190,20 @@ def _load_excel_table(contents: bytes) -> tuple[pl.DataFrame, list[tuple[int, in
     if CLIENT_COL not in df.columns and "None" in df.columns:
         df = df.rename({"None": CLIENT_COL})
 
-    if CAPTIVE_COL not in df.columns or CLIENT_COL not in df.columns:
+    # Client column is optional; if missing, add empty so grouping by Captive+Client still works
+    if CLIENT_COL not in df.columns:
+        df = df.with_columns(pl.lit("").alias(CLIENT_COL))
+
+    if CAPTIVE_COL not in df.columns:
         raise ValueError(f"Missing required columns. Found: {df.columns}")
+
+    # Require at least 35% of TARGET_COLUMNS so we only accept Salesforce Captive Summary files.
+    # RAP-only and RLIP-only exports have a subset of columns (~12); full combined has more.
+    # Referral/Commission maps only 1–2 targets, so 35% (ceil 9 of 24) keeps them invalid.
+    target_present = [c for c in TARGET_COLUMNS if c in df.columns]
+    min_required = math.ceil(0.35 * len(TARGET_COLUMNS))
+    if len(target_present) < min_required:
+        raise ValueError("Upload a valid Salesforce Captive Report file.")
 
     load_metadata = {"header_issues": header_issues} if header_issues else {}
     return df, header_cells, load_metadata
