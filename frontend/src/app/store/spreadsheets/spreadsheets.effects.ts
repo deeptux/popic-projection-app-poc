@@ -114,14 +114,16 @@ export class SpreadsheetsEffects {
           formData.append('file', file);
           return this.http.post<SpreadsheetsResponse>(COMMISSION_RAW_ENDPOINT, formData).pipe(
             map(result => commissionRawFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                commissionRawFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(commissionRawFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();
@@ -140,14 +142,16 @@ export class SpreadsheetsEffects {
           formData.append('file', file);
           return this.http.post<SpreadsheetsResponse>(COMMISSION_CLEANED_ENDPOINT, formData).pipe(
             map(result => commissionCleanedFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                commissionCleanedFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(commissionCleanedFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();
@@ -166,14 +170,16 @@ export class SpreadsheetsEffects {
           formData.append('file', file);
           return this.http.post<SpreadsheetsResponse>(REFERRAL_RAW_ENDPOINT, formData).pipe(
             map(result => referralRawFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                referralRawFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(referralRawFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();
@@ -192,14 +198,16 @@ export class SpreadsheetsEffects {
           formData.append('file', file);
           return this.http.post<SpreadsheetsResponse>(REFERRAL_CLEANED_ENDPOINT, formData).pipe(
             map(result => referralCleanedFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                referralCleanedFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(referralCleanedFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();
