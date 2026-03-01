@@ -237,6 +237,13 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
   readonly hasReferralRawSubTabs = computed(() => this.referralRawSlotCount() >= 2);
   readonly hasReferralCleanedSubTabs = computed(() => this.referralCleanedSlotCount() >= 2);
 
+  /** Shown above Salesforce drop zone when raw or cleaned upload failed (e.g. wrong file type). */
+  readonly salesforceUploadErrorBanner = computed(() => {
+    const raw = this.rawFileResults().some(slot => !!slot.error);
+    const cleaned = this.cleanedFileResults().some(slot => !!slot.error);
+    return raw || cleaned ? 'Upload a valid Salesforce Captive Report file.' : null;
+  });
+
   readonly currentRawSlot = computed(() => {
     const slots = this.rawFileResults();
     const idx = this.selectedRawIndex();
