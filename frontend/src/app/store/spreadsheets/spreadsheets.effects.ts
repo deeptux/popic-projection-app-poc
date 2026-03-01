@@ -57,14 +57,16 @@ export class SpreadsheetsEffects {
           formData.append('file', file);
           return this.http.post<SpreadsheetsResponse>(RAW_ENDPOINT, formData).pipe(
             map(result => rawFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                rawFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(rawFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();
@@ -84,14 +86,16 @@ export class SpreadsheetsEffects {
           formData.append('active_tab', 'salesforce');
           return this.http.post<SpreadsheetsResponse>(CLEANED_ENDPOINT, formData).pipe(
             map(result => cleanedFileSuccess({ index, result })),
-            catchError(err =>
-              of(
-                cleanedFileError({
-                  index,
-                  error: err?.message || err?.error?.detail || 'Request failed'
-                })
-              )
-            )
+            catchError(err => {
+              const body = err?.error;
+              const detail = body && typeof body === 'object' && typeof body.detail === 'string'
+                ? body.detail
+                : typeof body === 'string'
+                  ? body
+                  : null;
+              const error = detail ?? err?.message ?? 'Request failed';
+              return of(cleanedFileError({ index, error }));
+            })
           );
         });
         return observables.length > 0 ? merge(...observables) : of();

@@ -239,9 +239,12 @@ export class SpreadsheetsPage implements OnInit, OnDestroy {
 
   /** Shown above Salesforce drop zone when raw or cleaned upload failed (e.g. wrong file type). */
   readonly salesforceUploadErrorBanner = computed(() => {
-    const raw = this.rawFileResults().some(slot => !!slot.error);
-    const cleaned = this.cleanedFileResults().some(slot => !!slot.error);
-    return raw || cleaned ? 'Upload a valid Salesforce Captive Report file.' : null;
+    const rawSlots = this.rawFileResults();
+    const cleanedSlots = this.cleanedFileResults();
+    const rawWithError = rawSlots.find(slot => !!slot.error);
+    const cleanedWithError = cleanedSlots.find(slot => !!slot.error);
+    const message = cleanedWithError?.error ?? rawWithError?.error ?? null;
+    return message || null;
   });
 
   readonly currentRawSlot = computed(() => {
