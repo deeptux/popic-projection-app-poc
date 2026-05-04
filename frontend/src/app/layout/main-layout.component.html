@@ -1,4 +1,4 @@
-<div class="main-layout">
+<div class="main-layout" [class.main-layout--sidenav-collapsed]="isDesktop && sidenav.isCollapsed()">
   <app-sidenav />
   <main class="main-layout-content">
     <router-outlet />

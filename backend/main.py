@@ -1,3 +1,4 @@
+import os
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,14 +22,33 @@ import polars as pl
 AnalyticsBody = dict  # {"data": list[dict], "columns": list[str]}
 
 
+def _cors_settings() -> tuple[list[str], str | None]:
+    """Origins from CORS_ALLOWED_ORIGINS (comma-separated) merged with local dev defaults."""
+    defaults = ["http://localhost:4200", "http://127.0.0.1:4200"]
+    raw = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
+    extra = [o.strip() for o in raw.split(",") if o.strip()] if raw else []
+    merged = list(dict.fromkeys(defaults + extra))
+    regex = os.environ.get("CORS_ALLOW_ORIGIN_REGEX", "").strip() or None
+    return merged, regex
+
+
+_origins, _origin_regex = _cors_settings()
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=_origins,
+    allow_origin_regex=_origin_regex,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 
 @app.get("/")
 def test():
@@ -277,5 +297,6 @@ async def Upload_SalesforceCaptiveSummary_Merge_RLIP_RAP(
 
 
 if __name__ == "__main__":
-    # Important: Bind to 127.0.0.1 to avoid firewall popups
+    # Local dev: bind to 127.0.0.1 to avoid firewall popups. Cloud Run uses:
+    #   uvicorn main:app --host 0.0.0.0 --port $PORT
     uvicorn.run(app, host="127.0.0.1", port=8000)

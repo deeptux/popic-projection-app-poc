@@ -32,8 +32,9 @@ import {
 } from './spreadsheets.actions';
 import { Store } from '@ngrx/store';
 import type { SpreadsheetsState } from './spreadsheets.reducer';
+import { environment } from '../../../environments/environment';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = environment.apiBase;
 const RAW_ENDPOINT = `${API_BASE}/upload/salesforce-captive-summary/basic`;
 const CLEANED_ENDPOINT = `${API_BASE}/upload/salesforce-captive-summary`;
 const COMMISSION_RAW_ENDPOINT = `${API_BASE}/upload/commission-report/basic`;

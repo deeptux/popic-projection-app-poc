@@ -1,0 +1,66 @@
+# Deploy FastAPI backend to Cloud Run using Workload Identity Federation (no JSON keys).
+# Configure GitHub repository Variables (Settings → Secrets and variables → Actions → Variables):
+#   GCP_WORKLOAD_IDENTITY_PROVIDER — full provider resource name
+#   GCP_SERVICE_ACCOUNT — deployer service account email
+#   GCP_PROJECT_ID
+#   GCP_REGION — e.g. us-central1
+#   GCP_ARTIFACT_REGISTRY_REPO — Docker repo id in Artifact Registry
+#   CLOUD_RUN_SERVICE — Cloud Run service name
+#
+# After first deploy, set Cloud Run env CORS_ALLOWED_ORIGINS (and optional CORS_ALLOW_ORIGIN_REGEX)
+# in console or gcloud (comma-separated origins; escape commas per gcloud docs if needed).
+
+name: Deploy Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-cloud-run.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        working-directory: backend
+        env:
+          IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/${{ vars.CLOUD_RUN_SERVICE }}:${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_ARTIFACT_REGISTRY_REPO }}/${{ vars.CLOUD_RUN_SERVICE }}:${{ github.sha }}
+        run: |
+          gcloud run deploy "${{ vars.CLOUD_RUN_SERVICE }}" \
+            --image "$IMAGE" \
+            --region "${{ vars.GCP_REGION }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
+            --platform managed \
+            --port 8080 \
+            --allow-unauthenticated

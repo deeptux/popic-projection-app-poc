@@ -70,8 +70,6 @@
   --sidenav-width: clamp(11rem, 10vw + 8rem, 18rem);
   --sidenav-width-collapsed: clamp(2.75rem, 6vw, 3.5rem);
   width: var(--sidenav-width);
-  position: relative;
-  flex-shrink: 0;
   height: 100vh;
 }
 .sidenav--desktop.sidenav--collapsed {

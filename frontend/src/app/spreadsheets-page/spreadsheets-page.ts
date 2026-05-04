@@ -52,9 +52,10 @@ import {
   setReferralCleanedSlots,
   resetSpreadsheetsUpload
 } from '../store/spreadsheets';
+import { environment } from '../../environments/environment';
 
-const API_BASIC = 'http://127.0.0.1:8000/upload/salesforce-captive-summary/basic';
-const API_ANALYTICS = 'http://127.0.0.1:8000/analytics';
+const API_BASIC = `${environment.apiBase}/upload/salesforce-captive-summary/basic`;
+const API_ANALYTICS = `${environment.apiBase}/analytics`;
 
 interface SpreadsheetsResponse {
   filename: string;

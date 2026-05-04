@@ -296,18 +296,13 @@ export class SpreadsheetDataTableComponent {
   }
 
   setPageSize(size: number): void {
-    // #region agent log
     const before = this.pageSize();
-    // #endregion
     const validOptions = this.pageSizeOptions;
     const sizeNum = Number(size);
     const valid = Number.isFinite(sizeNum) && sizeNum > 0 && validOptions.includes(sizeNum);
     const newSize = valid ? sizeNum : (validOptions.includes(before) ? before : validOptions[0]);
     this.pageSize.set(newSize);
     this.pageIndex.set(0);
-    // #region agent log
-    fetch('http://127.0.0.1:7300/ingest/4ad0fa15-8d7c-4c81-9308-f31565d9bdbb', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'dfa0e3' }, body: JSON.stringify({ sessionId: 'dfa0e3', location: 'spreadsheet-data-table.component.ts:setPageSize', message: 'setPageSize', data: { title: this.title(), sizeParam: size, newSize, pageSizeBefore: before, pageSizeAfter: this.pageSize(), totalPagesAfter: this.totalPages(), paginatedLen: this.paginatedData().length }, timestamp: Date.now(), hypothesisId: 'H3,H4,H5' }) }).catch(() => { });
-    // #endregion
   }
 
   min(a: number, b: number): number {
