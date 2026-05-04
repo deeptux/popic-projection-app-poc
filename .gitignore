@@ -3,3 +3,6 @@
 
 # Backend debug logs
 backend/debug*.log
+
+# Local OIDC / key material (do not commit)
+backend/secrets/
