@@ -41,6 +41,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/demo/financial-reporting/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

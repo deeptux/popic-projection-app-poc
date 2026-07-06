@@ -2,5 +2,21 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist/frontend/browser",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "redirects": [
+    {
+      "source": "/demo/financial-reporting",
+      "destination": "/demo/financial-reporting/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/demo/financial-reporting/",
+      "destination": "/demo/financial-reporting/index.html"
+    },
+    {
+      "source": "/demo/financial-reporting/:path*",
+      "destination": "/demo/financial-reporting/index.html"
+    }
+  ]
 }
