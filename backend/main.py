@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingestion.engine import consolidate_excel_data, ingest_salesforce, merge_rlip_rap
-from ingestion.commission import ingest_commission
+from ingestion.commission import ingest_commission, read_commission_excel_raw
 from ingestion.referral import ingest_referral
 from analytics.charts import (
     top_additional_rent_line,
@@ -22,11 +22,24 @@ import polars as pl
 AnalyticsBody = dict  # {"data": list[dict], "columns": list[str]}
 
 
+def _normalize_cors_origin(origin: str) -> str:
+    """Strip whitespace and trailing slashes; browsers send Origin without a trailing slash."""
+    o = origin.strip()
+    while o.endswith("/"):
+        o = o[:-1]
+    return o
+
+
 def _cors_settings() -> tuple[list[str], str | None]:
     """Origins from CORS_ALLOWED_ORIGINS (comma-separated) merged with local dev defaults."""
-    defaults = ["http://localhost:4200", "http://127.0.0.1:4200"]
+    defaults = [_normalize_cors_origin(o) for o in ("http://localhost:4200", "http://127.0.0.1:4200")]
     raw = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
-    extra = [o.strip() for o in raw.split(",") if o.strip()] if raw else []
+    extra: list[str] = []
+    if raw:
+        for part in raw.split(","):
+            n = _normalize_cors_origin(part)
+            if n:
+                extra.append(n)
     merged = list(dict.fromkeys(defaults + extra))
     regex = os.environ.get("CORS_ALLOW_ORIGIN_REGEX", "").strip() or None
     return merged, regex
@@ -116,15 +129,20 @@ async def Upload_SalesforceCaptiveSummary(file: UploadFile = File(...), active_t
 
 @app.post("/upload/commission-report/basic")
 async def Upload_CommissionReportBasic(file: UploadFile = File(...)):
-    """Raw commission report: read Excel and return data/columns without ETL."""
+    """Raw commission report: same table discovery as Cleaned (header block + data region), no ETL."""
     contents = await file.read()
-    df = pl.read_excel(io.BytesIO(contents))
-    df = df.fill_nan(None)
+    try:
+        data, columns = read_commission_excel_raw(contents)
+    except Exception:
+        df = pl.read_excel(io.BytesIO(contents))
+        df = df.fill_nan(None)
+        data = df.to_dicts()
+        columns = df.columns
     return {
         "filename": file.filename,
-        "total_rows": len(df),
-        "columns": df.columns,
-        "data": df.to_dicts(),
+        "total_rows": len(data),
+        "columns": columns,
+        "data": data,
     }
 
 

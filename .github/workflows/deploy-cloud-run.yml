@@ -13,6 +13,7 @@
 name: Deploy Cloud Run
 
 on:
+  workflow_dispatch: # Redeploy backend without changing backend/** (Vercel still redeploys on every push).
   push:
     branches:
       - main

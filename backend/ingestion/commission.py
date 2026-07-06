@@ -146,6 +146,50 @@ def _load_commission_excel(contents: bytes) -> tuple[pl.DataFrame, list[tuple[in
     return df, header_cells
 
 
+def _summary_marker_expr(col: str) -> pl.Expr:
+    """True when cell is Subtotal / Count / Total (case-insensitive), after strip."""
+    s = pl.col(col).cast(pl.String).fill_null("").str.strip_chars().str.to_uppercase()
+    return s.is_in(["SUBTOTAL", "COUNT", "TOTAL"])
+
+
+def read_commission_excel_raw(contents: bytes) -> tuple[list[dict], list[str]]:
+    """
+    Load commission workbook for Raw API: same table discovery as ETL, original column names
+    (no canonical rename, no 35% validation). Duplicate/empty headers are uniquified like ETL.
+    """
+    df_raw = pl.read_excel(
+        source=io.BytesIO(contents),
+        has_header=False,
+        infer_schema_length=10000,
+    )
+    header_row = _find_commission_table_start_row(df_raw)
+    names_row = df_raw.row(header_row, named=False)
+    col_names = [_normalize_commission_header(str(c)) for c in names_row]
+    _seen: dict[str, int] = {}
+    _uniquified: list[str] = []
+    for name in col_names:
+        base = (name or "").strip() or "column"
+        _seen[base] = _seen.get(base, 0) + 1
+        _uniquified.append(base if _seen[base] == 1 else f"{base}_{_seen[base]}")
+    col_names = _uniquified
+
+    df_data = df_raw.slice(header_row + 1)
+    if df_data.height == 0:
+        df = pl.DataFrame(schema={c: pl.Utf8 for c in col_names})
+    else:
+        df = pl.DataFrame(
+            [df_data.row(i, named=False) for i in range(df_data.height)],
+            orient="row",
+        )
+        n = min(len(df.columns), len(col_names))
+        df = df.rename({df.columns[i]: col_names[i] for i in range(n)})
+
+    new_cols = {col: _normalize_commission_header(col) for col in df.columns}
+    df = df.rename(new_cols)
+    df = df.fill_nan(None)
+    return df.to_dicts(), list(df.columns)
+
+
 def _clean_and_aggregate_commission(df: pl.DataFrame) -> pl.DataFrame:
     """Forward-fill key columns, filter Subtotal/Count rows, clean numerics, group by (Salesperson, Captive, Client), sum/first."""
     # Forward-fill so blank cells inherit from above
@@ -153,13 +197,16 @@ def _clean_and_aggregate_commission(df: pl.DataFrame) -> pl.DataFrame:
     df = df.with_columns(pl.col(CAPTIVE_COL).cast(pl.String).fill_null(strategy="forward"))
     df = df.with_columns(pl.col(CLIENT_COL).cast(pl.String).fill_null(""))
 
-    # Filter out Subtotal, Count, and Total rows (summary markers in first key column)
-    df = df.filter(
-        pl.col(SALESPERSON_COL).is_not_null()
-        & (pl.col(SALESPERSON_COL).str.to_uppercase() != "SUBTOTAL")
-        & (pl.col(SALESPERSON_COL).str.to_uppercase() != "COUNT")
-        & (pl.col(SALESPERSON_COL).str.to_uppercase() != "TOTAL")
-    )
+    # Filter out summary rows if any key column is Subtotal/Count/Total (matches varied report layouts)
+    summary_sales = _summary_marker_expr(SALESPERSON_COL)
+    summary_cap = _summary_marker_expr(CAPTIVE_COL)
+    summary_cli = _summary_marker_expr(CLIENT_COL)
+    df = df.filter(~(summary_sales | summary_cap | summary_cli))
+    # Drop completely blank key rows (spacers)
+    sp = pl.col(SALESPERSON_COL).cast(pl.String).fill_null("").str.strip_chars().str.len_chars()
+    cp = pl.col(CAPTIVE_COL).cast(pl.String).fill_null("").str.strip_chars().str.len_chars()
+    cl = pl.col(CLIENT_COL).cast(pl.String).fill_null("").str.strip_chars().str.len_chars()
+    df = df.filter((sp + cp + cl) > 0)
 
     existing_sum = [c for c in COMMISSION_SUM_COLUMNS if c in df.columns]
     existing_first = [c for c in COMMISSION_FIRST_COLUMNS if c in df.columns]
@@ -188,7 +235,7 @@ def _clean_and_aggregate_commission(df: pl.DataFrame) -> pl.DataFrame:
     grouped = df.group_by(group_cols).agg(agg_exprs)
     # Reorder columns for Cleaned Data: key cols, then Income Type / Commission Rate / Account Name / Year, then Commissions (Jan–Dec, Total), then P&L (Jan–Dec)
     output_cols = [c for c in CLEANED_OUTPUT_COLUMN_ORDER if c in grouped.columns]
-    return grouped.select(output_cols).sort([SALESPERSON_COL, CAPTIVE_COL])
+    return grouped.select(output_cols).sort([SALESPERSON_COL, CAPTIVE_COL, CLIENT_COL])
 
 
 def _get_commission_period_from_table(df: pl.DataFrame) -> Optional[tuple[int, int]]:
