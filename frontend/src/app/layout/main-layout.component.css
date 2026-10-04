@@ -18,6 +18,6 @@
     margin-left: clamp(11rem, 10vw + 8rem, 18rem);
   }
   .main-layout--sidenav-collapsed .main-layout-content {
-    margin-left: clamp(2.75rem, 6vw, 3.5rem);
+    margin-left: 5rem;
   }
 }

@@ -68,7 +68,8 @@
 /* Desktop (1024px+): wider sidebar so nav text doesn’t ellipsis; scales with viewport */
 .sidenav--desktop {
   --sidenav-width: clamp(11rem, 10vw + 8rem, 18rem);
-  --sidenav-width-collapsed: clamp(2.75rem, 6vw, 3.5rem);
+  /* Fixed rail wide enough for logo + icons + chevron (avoid vw cap squashing content) */
+  --sidenav-width-collapsed: 5rem;
   width: var(--sidenav-width);
   height: 100vh;
 }
@@ -129,12 +130,27 @@
   transform: rotate(180deg);
 }
 
+.sidenav--desktop.sidenav--collapsed .sidenav-chevron {
+  width: 1.125rem;
+  height: 2.25rem;
+}
+
 .sidenav-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   padding-right: clamp(1.5rem, 4vw, 2rem);
+}
+
+.sidenav--desktop.sidenav--collapsed .sidenav-content {
+  padding-right: 0;
+  align-items: center;
+}
+
+.sidenav--desktop.sidenav--collapsed .sidenav-inner {
+  padding-left: 0.375rem;
+  padding-right: 0;
 }
 
 /* Logo: fluid size; collapsed = small logo */
@@ -149,10 +165,18 @@
   object-fit: contain;
   transition: opacity 0.2s;
 }
-.sidenav--collapsed .sidenav-logo {
-  height: clamp(2rem, 4vw, 2.5rem);
-  max-width: 90%;
-  margin: 0 auto;
+.sidenav--desktop.sidenav--collapsed .sidenav-logo-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.sidenav--desktop.sidenav--collapsed .sidenav-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  max-width: none;
+  object-fit: contain;
   display: block;
 }
 
@@ -203,8 +227,22 @@
 .sidenav--collapsed .sidenav-link-text {
   display: none;
 }
-.sidenav--collapsed .sidenav-link {
+
+.sidenav--desktop.sidenav--collapsed .sidenav-nav {
+  width: 100%;
+  align-items: center;
+}
+
+.sidenav--desktop.sidenav--collapsed .sidenav-link {
   justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.sidenav--desktop.sidenav--collapsed .sidenav-link-icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
