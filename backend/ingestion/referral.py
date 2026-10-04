@@ -21,7 +21,7 @@ from ingestion.period import (
 # --- Canonical key columns (grouping) ---
 VENDOR_COL = "Vendor"
 CAPTIVE_COL = "Captive Name"
-CLIENT_COL = "Client Name (in POPIC)"
+CLIENT_COL = "Client Name"
 
 # Table/year columns
 YEAR_COL = "Year"
@@ -46,7 +46,7 @@ REFERRAL_MONTH_COLUMNS = [
 ]
 
 REFERRAL_FEE_COLUMNS = [
-    "POPIC Fee",
+    "Fee",
 ]
 
 REFERRAL_PNL_MONTH_COLUMNS = [

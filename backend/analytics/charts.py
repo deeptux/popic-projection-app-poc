@@ -12,8 +12,8 @@ CAPTIVE_COL = "Captive Name: Captive Name"
 CLIENT_COL = "Captive Name: Client"
 ADDITIONAL_RENT = "Additional Rent"
 TOTAL_AVAILABLE_UNITS = "Total Available Units"
-POPIC_FEE_RLIP = "POPIC Fee RLIP"
-POPIC_FEE_RAP = "POPIC Fee RAP"
+POPIC_FEE_RLIP = "Fee RLIP"
+POPIC_FEE_RAP = "Fee RAP"
 
 # Optional aliases for robustness (e.g. display/export variants). ADTL RENT = abbreviated "Additional Rent".
 COLUMN_ALIASES: dict[str, str] = {

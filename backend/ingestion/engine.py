@@ -29,9 +29,9 @@ TARGET_COLUMNS = [
     "Administrative Fees", "Net Premium to Captive",
     "Claims Reserves", "Operating Expenses", "Proxy Tax",
     "Other Expenses", "Net Income", "Total Available Units",
-    "Enrolled Units", "POPIC Fee RLIP FOF", "POPIC Fee RAP FOF",
-    "POPIC Fee RLIP", "POPIC Fee RAP",
-    "POPIC Fee From Parent RLIP", "POPIC Fee From Parent RAP",
+    "Enrolled Units", "Fee RLIP FOF", "Fee RAP FOF",
+    "Fee RLIP", "Fee RAP",
+    "Fee From Parent RLIP", "Fee From Parent RAP",
     "Penetration %",
 ]
 

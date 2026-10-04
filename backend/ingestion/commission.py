@@ -20,7 +20,7 @@ from ingestion.period import (
 # --- Canonical key columns (grouping) ---
 SALESPERSON_COL = "Salesperson"
 CAPTIVE_COL = "Captive Name"
-CLIENT_COL = "Client Name (in POPIC)"
+CLIENT_COL = "Client Name"
 
 # Columns to sum when grouping (month P&L, month Commission, Total)
 COMMISSION_MONTH_PNL = [

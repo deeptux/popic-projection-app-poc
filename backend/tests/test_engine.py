@@ -20,8 +20,8 @@ def _minimal_excel_bytes_with_canonical_headers() -> bytes:
         CAPTIVE_COL: ["Cap A", "Cap A", "Cap B"],
         CLIENT_COL: ["C1", "C2", "C1"],
         "Gross Written Premium": [100.0, 200.0, 50.0],
-        "POPIC Fee RLIP": [1.0, 2.0, 0.5],
-        "POPIC Fee RAP": [0.0, 0.0, 0.0],
+        "Fee RLIP": [1.0, 2.0, 0.5],
+        "Fee RAP": [0.0, 0.0, 0.0],
     })
     buf = io.BytesIO()
     df.write_excel(buf)
@@ -34,8 +34,8 @@ def _minimal_excel_bytes_with_fuzzy_headers() -> bytes:
         "captive Name: captive name": ["Cap A", "Cap A"],
         "Captive Name: Client": ["C1", "C2"],
         "Gross Written Premium": [100.0, 200.0],
-        "POPIC Fee RLIP": [1.0, 2.0],
-        "POPIC Fee RAP": [0.0, 0.0],
+        "Fee RLIP": [1.0, 2.0],
+        "Fee RAP": [0.0, 0.0],
     })
     buf = io.BytesIO()
     df.write_excel(buf)
